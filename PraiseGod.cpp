@@ -27,11 +27,28 @@ double threshold20Pips = 0;
 
 double threshold30Pips = 0;
 
+double threshold40Pips = 0;
+
+double threshold50Pips = 0;
+
+double threshold60Pips = 0;
+
+double threshold70Pips = 0;
+
+double threshold80Pips = 0;
+
 bool Adj1 = false;
 bool Adj2 = false;
 bool Adj3 = false;
+bool Adj4 = false;
+bool Adj5 = false;
+bool Adj6 = false;
+bool Adj7 = false;
+bool Adj8 = false;
 
 bool entry_made = false;
+
+int repcount = 0;
 
  
 
@@ -52,9 +69,21 @@ void ClosePositionsIfProfitAbove(double profitThreshold)
       threshold10Pips = 0;
       threshold20Pips = 0;
       threshold30Pips = 0;
+      threshold40Pips = 0;
+      threshold50Pips = 0;
+      threshold60Pips = 0;
+      threshold70Pips = 0;
+      threshold80Pips = 0;
+      
       Adj1 = false;
       Adj2 = false;
       Adj3 = false;
+      Adj4 = false;
+      Adj5 = false;
+      Adj6 = false;
+      Adj7 = false;
+      Adj8 = false;
+      
       entry_made = false;
          
      pips = PipAdj;
@@ -226,16 +255,34 @@ void sendBuyOrder(bool initial)
           OrderSend(request, result);  // ORDER SEND
           //last_profit_level = cost;    // Update the last profit level
           if(entry_made == false){
-            threshold10Pips = cost - (100 * _Point);
-            threshold20Pips = cost - (200 * _Point);
-            threshold30Pips = cost - (300 * _Point);
+            threshold10Pips = cost - (500 * _Point);
+            threshold20Pips = cost - (1000 * _Point);
+            threshold30Pips = cost - (1500 * _Point);
             }
         }
 }
 
 void sendSellOrder(bool initial)
 {
-
+      
+        double size = LotSize;
+        if(Adj1)
+         size = 0.01;
+        if(Adj2)
+         size = 0.02;
+        if(Adj3)
+         size = 0.03;
+        if(Adj4)
+         size = 0.04;
+        if(Adj5)
+         size = 0.05;
+        if(Adj6)
+         size = 0.06;
+        if(Adj7)
+         size = 0.07;
+        if(Adj8)
+         size = 0.08;        
+        
         double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
       //if (order_type == ORDER_TYPE_SELL)
         //cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
@@ -247,7 +294,7 @@ void sendSellOrder(bool initial)
         MqlTradeRequest request = {};
         request.action = TRADE_ACTION_DEAL;
         request.symbol = Symbol();
-        request.volume = LotSize;
+        request.volume = size;
         request.type = ORDER_TYPE_SELL;
         request.price = cost;
         request.deviation = 2;
@@ -261,18 +308,52 @@ void sendSellOrder(bool initial)
         MqlDateTime timeStruct;
         TimeToStruct(currentTime, timeStruct);
         int currentHour = timeStruct.hour;
-
+      
         if (currentHour > 12 && currentHour < 20 && initial == true) {
           OrderSend(request, result);  // ORDER SEND
           //last_profit_level = cost;    // Update the last profit level
-            threshold10Pips = cost + (50 * _Point);
-            threshold20Pips = cost + (100 * _Point);
-            threshold30Pips = cost + (150 * _Point);
+            int points = 500;
+            threshold10Pips = cost + (points * _Point);
+            threshold20Pips = cost + (points * 2 * _Point);
+            threshold30Pips = cost + (points * 3 * _Point);
+            threshold40Pips = cost + (points * 5 * _Point);
+            threshold50Pips = cost + (points * 8 * _Point);
+            threshold60Pips = cost + (points * 3 * _Point);
+            threshold70Pips = cost + (points * 5 * _Point);
+            threshold80Pips = cost + (points * 8 * _Point);
             entry_made = true;
+            
+            ObjectCreate(0,"My Line1",OBJ_HLINE,0,0,threshold10Pips);
+            ObjectCreate(0,"My Line2",OBJ_HLINE,0,0,threshold20Pips);
+            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,threshold30Pips);
+            
         }else if(initial == false){
          OrderSend(request, result);
         }
 }
+
+
+
+void ClosePositionsIfOpenForFiveDays()
+{
+    for (int i = PositionsTotal() - 1; i >= 0; i--)
+    {
+        ulong ticket = PositionGetTicket(i);
+        
+        if (PositionSelectByTicket(ticket))
+        {
+            datetime entryTime = PositionGetInteger(POSITION_TIME);
+            datetime currentTime = TimeCurrent();
+            int timeDifference = (int)(currentTime - entryTime) / 60 / 60 / 24;  // Calculate the time difference in days
+            
+            if (timeDifference >= 20)
+            {
+               trade.PositionClose(ticket);
+            }
+        }
+    }
+}
+
 
 
 void OpenPositions()
@@ -322,10 +403,11 @@ void OpenPositions()
         // ...
           Print("ADJ2");
         /*if(ordertype == POSITION_TYPE_SELL)
-         //sendSellOrder(false);
+        sendSellOrder(false);
         else if(ordertype == POSITION_TYPE_BUY)
          //sendBuyOrder(false); */
         Adj2 = true;
+        sendSellOrder(false);
 
     }
 
@@ -344,12 +426,118 @@ void OpenPositions()
         else if(ordertype == POSITION_TYPE_BUY)
          //sendBuyOrder(false);*/
         Adj3 = true;
+        sendSellOrder(false);
+
+    }
+    
+        if (currentPrice >= threshold40Pips && Adj4 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+        /*if(ordertype == POSITION_TYPE_SELL)
+         //sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);*/
+        Adj4 = true;
+        sendSellOrder(false);
+
+    }
+    
+        if (currentPrice >= threshold50Pips && Adj5 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+        /*if(ordertype == POSITION_TYPE_SELL)
+         //sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);*/
+        Adj5 = true;
+        sendSellOrder(false);
+
+    }
+    
+            if (currentPrice >= threshold50Pips && Adj6 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+        /*if(ordertype == POSITION_TYPE_SELL)
+         //sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);*/
+        Adj6 = true;
+        sendSellOrder(false);
+
+    }
+    
+            if (currentPrice >= threshold50Pips && Adj7 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+        /*if(ordertype == POSITION_TYPE_SELL)
+         //sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);*/
+        Adj7 = true;
+        sendSellOrder(false);
+
+    }
+    
+            if (currentPrice >= threshold50Pips && Adj8 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+        /*if(ordertype == POSITION_TYPE_SELL)
+         //sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);*/
+        Adj8 = true;
+        sendSellOrder(false);
 
     }
     
    
 
    }
+   
+void countReps()
+{
+    // Calculate the arrow coordinates
+    double arrowX = TimeCurrent();
+    double arrowY = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+
+    // Delete the previous arrow object, if it exists
+    ObjectsDeleteAll(0, "CurrentPriceArrow");
+
+    // Draw the arrow
+    ObjectCreate(0, "CurrentPriceArrow", OBJ_ARROW, 0, arrowX, arrowY);
+    ObjectSetInteger(0, "CurrentPriceArrow", OBJPROP_ARROWCODE, 233);
+    ObjectSetInteger(0, "CurrentPriceArrow", OBJPROP_COLOR, clrGreen);
+    ObjectSetInteger(0, "CurrentPriceArrow", OBJPROP_WIDTH, 1);
+    ObjectSetInteger(0, "CurrentPriceArrow", OBJPROP_BACK, false);
+    
+    repcount++;
+    Print("repcount: ", repcount);
+}
    
 
 
@@ -368,7 +556,8 @@ void OnTick()
 
          }
       }*/
-   ClosePositionsIfProfitAbove(3);
+   ClosePositionsIfProfitAbove(20);
+   //ClosePositionsIfOpenForFiveDays();
    
    if(entry_made){
    
@@ -419,13 +608,13 @@ void OnTick()
 
         // ...
         
-        
+        countReps();
         sendSellOrder(true);
         
 
     }
 
-    else if (isBullishMorningStar && higherTimeframeTrend == 1 && PositionsTotal() < 1)
+    else if (isBullishMorningStar && higherTimeframeTrend == 1 && PositionsTotal() < 1 || isBullishMorningStar)
 
     {
 
@@ -434,7 +623,7 @@ void OnTick()
         // ...
         
        //sendBuyOrder();
-       //Print("isBullishMorningStar");
+       Print("isBullishMorningStar");
 
     }
 
@@ -463,6 +652,8 @@ void OnTick()
         //Print("isBullishThreeInsideUp");
         
         //sendBuyOrder();
+        
+    
 
     }
     
@@ -490,6 +681,9 @@ void OnTick()
         
         //Print("isBullishThreeInsideUp");
         
+        //sendSellOrder(true);
+        
+        //countReps();
         //sendSellOrder(true);
 
     }
