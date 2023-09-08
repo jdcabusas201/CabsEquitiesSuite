@@ -31,6 +31,8 @@ bool Adj1 = false;
 bool Adj2 = false;
 bool Adj3 = false;
 
+bool entry_made = false;
+
  
 
 // Function to check higher timeframe trend
@@ -42,20 +44,20 @@ void ClosePositionsIfProfitAbove(double profitThreshold)
     
     if (overallProfit > profitThreshold || ClosePositionsIfEquityBelowPercentOfBalance(BalanceThreshold))
     {
-      for (int i = 0; i < PositionsTotal(); i++) {
+      for (int i = PositionsTotal(); i >= 0; i--) {
         ulong ticket = PositionGetTicket(i);
         if (PositionSelectByTicket(ticket)) trade.PositionClose(ticket);
-
-            threshold10Pips = 0;
-            threshold20Pips = 0;
-            threshold30Pips = 0;
-            Adj1 = false;
-            Adj2 = false;
-            Adj3 = false;
-         
-          pips = PipAdj;
        
       }
+      threshold10Pips = 0;
+      threshold20Pips = 0;
+      threshold30Pips = 0;
+      Adj1 = false;
+      Adj2 = false;
+      Adj3 = false;
+      entry_made = false;
+         
+     pips = PipAdj;
 }
 }
 
@@ -194,7 +196,7 @@ bool IsBearishThreeBlackCrows()
 void sendBuyOrder(bool initial)
 {
 
-        double cost = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+        double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
       //if (order_type == ORDER_TYPE_SELL)
         //cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
         
@@ -223,10 +225,10 @@ void sendBuyOrder(bool initial)
         if (currentHour > 12 && currentHour < 20) {
           OrderSend(request, result);  // ORDER SEND
           //last_profit_level = cost;    // Update the last profit level
-          if(magic == 12){
-            threshold10Pips = cost - (10 * _Point);
-            threshold20Pips = cost - (20 * _Point);
-            threshold30Pips = cost - (30 * _Point);
+          if(entry_made == false){
+            threshold10Pips = cost - (100 * _Point);
+            threshold20Pips = cost - (200 * _Point);
+            threshold30Pips = cost - (300 * _Point);
             }
         }
 }
@@ -260,14 +262,15 @@ void sendSellOrder(bool initial)
         TimeToStruct(currentTime, timeStruct);
         int currentHour = timeStruct.hour;
 
-        if (currentHour > 12 && currentHour < 20) {
+        if (currentHour > 12 && currentHour < 20 && initial == true) {
           OrderSend(request, result);  // ORDER SEND
           //last_profit_level = cost;    // Update the last profit level
-          if(magic == 12){
-            threshold10Pips = cost + (10 * _Point);
-            threshold20Pips = cost + (20 * _Point);
-            threshold30Pips = cost + (30 * _Point);
-            }
+            threshold10Pips = cost + (50 * _Point);
+            threshold20Pips = cost + (100 * _Point);
+            threshold30Pips = cost + (150 * _Point);
+            entry_made = true;
+        }else if(initial == false){
+         OrderSend(request, result);
         }
 }
 
@@ -281,40 +284,28 @@ void OpenPositions()
     double pipValue = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
 
     double openPrice = 0.0;
-   
-    int ordertype = 0;
     
     double target_price = 0;
     
     double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-    if(ordertype == POSITION_TYPE_SELL)
-       currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+    //if(ordertype == POSITION_TYPE_SELL)
+       //currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
 
-    // Check if there are existing positions with the specified magic number
-
-    int totalPositions = PositionsTotal();
     
-         for (int i = 0; i < PositionsTotal(); i++) {
-      ulong ticket = PositionGetTicket(i);
-      
-      if (PositionSelectByTicket(ticket)) {
-        string magic = PositionGetString(POSITION_COMMENT);
-        
-        if(magic == "12"){
-         if (currentPrice >= threshold10Pips && Adj1 == false)
+      if (currentPrice >= threshold10Pips && Adj1 == false)
     {
 
         // Open position at 10 pips
 
         // ...
-        
-        Print("ADJ1");
-        if(ordertype == POSITION_TYPE_SELL)
-         sendSellOrder(false);
-        else
-         sendBuyOrder(false);
+      
+        //if(ordertype == POSITION_TYPE_SELL)
+      
+        //else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);
          
         Adj1 = true; 
+        sendSellOrder(false);
 
         
 
@@ -329,11 +320,11 @@ void OpenPositions()
         // Open position at 20 pips
 
         // ...
-          Print("ADJ1");
-        if(ordertype == POSITION_TYPE_SELL)
-         sendSellOrder(false);
-        else
-         sendBuyOrder(false);  
+          Print("ADJ2");
+        /*if(ordertype == POSITION_TYPE_SELL)
+         //sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false); */
         Adj2 = true;
 
     }
@@ -347,33 +338,51 @@ void OpenPositions()
         // Open position at 30 pips
 
         // ...
-         Print("ADJ1");
-         if(ordertype == POSITION_TYPE_SELL)
-         sendSellOrder(false);
-        else
-         sendBuyOrder(false); 
+         Print("ADJ3");
+        /*if(ordertype == POSITION_TYPE_SELL)
+         //sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);*/
         Adj3 = true;
 
     }
-        }
-        
-      
-      }
+    
+   
+
    }
    
 
-    
-
-}
 
 void OnTick()
 
 {
 
+//OpenPositions();
+   /*for (int i = 0; i < PositionsTotal(); i++) {
+      ulong ticket = PositionGetTicket(i);
+      
+      if (PositionSelectByTicket(ticket)) {
+        string magic = PositionGetString(POSITION_COMMENT);
+        int order_type = PositionGetInteger(POSITION_TYPE);
+        OpenPositions(order_type);
 
-
-   ClosePositionsIfProfitAbove(10);
-   OpenPositions();
+         }
+      }*/
+   ClosePositionsIfProfitAbove(3);
+   
+   if(entry_made){
+   
+      
+      OpenPositions();
+     }
+   /*Print("1: ", threshold10Pips);
+   Print("2: ", threshold20Pips);
+   Print("3: ", threshold30Pips);
+   Print("entry_made: ", entry_made);
+   Print("Adj1 Hit: ", Adj1);
+   Print("Adj2 Hit: ", Adj2);
+   Print("Adj3 Hit: ", Adj3);
+   Print("AccountInfoDouble(ACCOUNT_PROFIT): ", AccountInfoDouble(ACCOUNT_PROFIT));  */
    //Print(SymbolInfoDouble(Symbol(), SYMBOL_ASK) > threshold10Pips);
    //Print(SymbolInfoDouble(Symbol(), SYMBOL_ASK));
    //ClosePositionsIfEquityBelowPercentOfBalance(60);
@@ -412,6 +421,7 @@ void OnTick()
         
         
         sendSellOrder(true);
+        
 
     }
 
