@@ -17,9 +17,12 @@ input double LotSize = 0.01;
 
 input double BalanceThreshold = 50;
 
-input int PipAdj = 10;
+input int takeProfit = 10;
 
-int pips = PipAdj;
+input double size1 = 0.01;
+input double size2 = 0.01;
+input double size3 = 0.01;
+
 
 double threshold10Pips = 0;
 
@@ -47,8 +50,11 @@ bool Adj7 = false;
 bool Adj8 = false;
 
 bool entry_made = false;
+bool draw_down = false;
 
 int repcount = 0;
+
+
 
  
 
@@ -86,11 +92,73 @@ void ClosePositionsIfProfitAbove(double profitThreshold)
       
       entry_made = false;
          
-     pips = PipAdj;
+     
 }
 }
 
+void CloseBuyPositions()
+{
+    double overallProfit = 0;
+    CTrade trade;
+   
+      for (int i = PositionsTotal(); i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if (PositionSelectByTicket(ticket))
+        {
+         if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY)
+            overallProfit = overallProfit + PositionGetDouble(POSITION_PROFIT);
+        } 
+       
+      }
+      if(overallProfit > 1){
+         for (int i = PositionsTotal(); i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if (PositionSelectByTicket(ticket))
+        {
+         if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY)
+            trade.PositionClose(ticket);
+        } 
+       
+      }
+      }
+      
+      /*threshold10Pips = 0;
+      threshold20Pips = 0;
+      threshold30Pips = 0;
+      threshold40Pips = 0;
+      threshold50Pips = 0;
+      threshold60Pips = 0;
+      threshold70Pips = 0;
+      threshold80Pips = 0;
+      
+      Adj1 = false;
+      Adj2 = false;
+      Adj3 = false;
+      Adj4 = false;
+      Adj5 = false;
+      Adj6 = false;
+      Adj7 = false;
+      Adj8 = false;
+      
+      entry_made = false;
+         
+     pips = PipAdj;*/
+
+}
+
 bool ClosePositionsIfEquityBelowPercentOfBalance(double percentThreshold) {
+  double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+  double accountEquity = AccountInfoDouble(ACCOUNT_EQUITY);
+  bool result = false;
+
+  if ((accountEquity / accountBalance) * 100 < percentThreshold) {
+    result = true;
+  }
+
+  return result;
+}
+
+bool inDrawDown(double percentThreshold) {
   double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
   double accountEquity = AccountInfoDouble(ACCOUNT_EQUITY);
   bool result = false;
@@ -139,10 +207,11 @@ int GetHigherTimeframeTrend()
 
 bool IsBearishEveningStar()
 {
-    if (iClose(Symbol(), Period(), 2) > iOpen(Symbol(), Period(), 2) &&                  // Large bullish candle
+    if (
+        iClose(Symbol(), Period(), 2) > iOpen(Symbol(), Period(), 2) + (50*_Point) &&                  // Large bullish candle
         iClose(Symbol(), Period(), 1) > iOpen(Symbol(), Period(), 1) &&                  // Small-bodied candle (can be bullish or bearish)
         iClose(Symbol(), Period(), 1) > iClose(Symbol(), Period(), 2) &&                 // Second candle gaps up
-        iClose(Symbol(), Period(), 0) < iOpen(Symbol(), Period(), 0) &&                  // Large bearish candle
+        iClose(Symbol(), Period(), 0) < iOpen(Symbol(), Period(), 0) - (50*_Point) &&                  // Large bearish candle
         iClose(Symbol(), Period(), 0) < iClose(Symbol(), Period(), 2) + (iOpen(Symbol(), Period(), 2) - iClose(Symbol(), Period(), 2)) / 2)   // Third candle closes below midpoint of first candle
     {
         return true;    // Bearish Evening Star pattern is present
@@ -225,47 +294,7 @@ bool IsBearishThreeBlackCrows()
 void sendBuyOrder(bool initial)
 {
 
-        double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
-      //if (order_type == ORDER_TYPE_SELL)
-        //cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
-        
-        string magic = " ";
-        if(initial)
-         magic = "12";
-        
-        MqlTradeRequest request = {};
-        request.action = TRADE_ACTION_DEAL;
-        request.symbol = Symbol();
-        request.volume = LotSize;
-        request.type = ORDER_TYPE_BUY;
-        request.price = cost;
-        request.deviation = 2;
-        request.comment = magic;
-        request.type_filling = ORDER_FILLING_FOK;
-        //request.tp = 1;
-        MqlTradeResult result;
-
-        // SEND ORDER ONLY IF WE ARE WITHIN SET HOURS
-        datetime currentTime = TimeCurrent();
-        MqlDateTime timeStruct;
-        TimeToStruct(currentTime, timeStruct);
-        int currentHour = timeStruct.hour;
-
-        if (currentHour > 12 && currentHour < 20) {
-          OrderSend(request, result);  // ORDER SEND
-          //last_profit_level = cost;    // Update the last profit level
-          if(entry_made == false){
-            threshold10Pips = cost - (500 * _Point);
-            threshold20Pips = cost - (1000 * _Point);
-            threshold30Pips = cost - (1500 * _Point);
-            }
-        }
-}
-
-void sendSellOrder(bool initial)
-{
-      
-        double size = LotSize;
+        /*double size = LotSize;
         if(Adj1)
          size = 0.01;
         if(Adj2)
@@ -281,7 +310,81 @@ void sendSellOrder(bool initial)
         if(Adj7)
          size = 0.07;
         if(Adj8)
-         size = 0.08;        
+         size = 0.08;*/        
+       
+        
+        double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+        double tp = 0;
+      //if (order_type == ORDER_TYPE_SELL)
+        //cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+        if(draw_down)
+         tp =  cost + ( 50 * _Period);
+        string magic = " ";
+        if(initial)
+         magic = "12";
+        
+        MqlTradeRequest request = {};
+        request.action = TRADE_ACTION_DEAL;
+        request.symbol = Symbol();
+        request.volume = 0.02;
+        request.type = ORDER_TYPE_BUY;
+        request.price = cost;
+        request.deviation = 2;
+        request.comment = magic;
+        request.type_filling = ORDER_FILLING_FOK;
+        //request.tp = cost + ( 50 * _Period);
+        MqlTradeResult result;
+
+        // SEND ORDER ONLY IF WE ARE WITHIN SET HOURS
+        datetime currentTime = TimeCurrent();
+        MqlDateTime timeStruct;
+        TimeToStruct(currentTime, timeStruct);
+        int currentHour = timeStruct.hour;
+      
+        if (currentHour > 12 && currentHour < 20 && initial == true) {
+          OrderSend(request, result);  // ORDER SEND
+          //last_profit_level = cost;    // Update the last profit level
+            int points = 500;
+            threshold10Pips = cost - (points * _Point);
+            threshold20Pips = cost - (points * 2 * _Point);
+            threshold30Pips = cost - (points * 3 * _Point);
+            threshold40Pips = cost - (points * 5 * _Point);
+            threshold50Pips = cost - (points * 8 * _Point);
+            threshold60Pips = cost - (points * 3 * _Point);
+            threshold70Pips = cost - (points * 5 * _Point);
+            threshold80Pips = cost - (points * 8 * _Point);
+            entry_made = true;
+            
+            ObjectCreate(0,"My Line1",OBJ_HLINE,0,0,threshold10Pips);
+            ObjectCreate(0,"My Line2",OBJ_HLINE,0,0,threshold20Pips);
+            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,threshold30Pips);
+            
+        }else if(initial == false){
+         OrderSend(request, result);
+      
+        }
+}
+
+void sendSellOrder(bool initial)
+{
+      
+        double size = LotSize;
+        if(Adj1)
+         size = size1;
+        if(Adj2)
+         size = size2;
+        if(Adj3)
+         size = size3;
+        //if(Adj4)
+         //size = 0.01;
+        /*if(Adj5)
+         size = 0.05;
+        if(Adj6)
+         size = 0.06;
+        if(Adj7)
+         size = 0.07;
+        if(Adj8)
+         size = 0.08;*/        
         
         double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
       //if (order_type == ORDER_TYPE_SELL)
@@ -312,7 +415,9 @@ void sendSellOrder(bool initial)
         if (currentHour > 12 && currentHour < 20 && initial == true) {
           OrderSend(request, result);  // ORDER SEND
           //last_profit_level = cost;    // Update the last profit level
-            int points = 500;
+          
+          
+            int points = 1000;
             threshold10Pips = cost + (points * _Point);
             threshold20Pips = cost + (points * 2 * _Point);
             threshold30Pips = cost + (points * 3 * _Point);
@@ -326,6 +431,7 @@ void sendSellOrder(bool initial)
             ObjectCreate(0,"My Line1",OBJ_HLINE,0,0,threshold10Pips);
             ObjectCreate(0,"My Line2",OBJ_HLINE,0,0,threshold20Pips);
             ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,threshold30Pips);
+            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,threshold40Pips);
             
         }else if(initial == false){
          OrderSend(request, result);
@@ -346,7 +452,7 @@ void ClosePositionsIfOpenForFiveDays()
             datetime currentTime = TimeCurrent();
             int timeDifference = (int)(currentTime - entryTime) / 60 / 60 / 24;  // Calculate the time difference in days
             
-            if (timeDifference >= 20)
+            if (timeDifference >= 30)
             {
                trade.PositionClose(ticket);
             }
@@ -430,18 +536,15 @@ void OpenPositions()
 
     }
     
-        if (currentPrice >= threshold40Pips && Adj4 == false)
+     /*   if (currentPrice >= threshold40Pips && Adj4 == false)
 
     {
 
         // Open position at 30 pips
 
         // ...
-         Print("ADJ3");
-        /*if(ordertype == POSITION_TYPE_SELL)
-         //sendSellOrder(false);
-        else if(ordertype == POSITION_TYPE_BUY)
-         //sendBuyOrder(false);*/
+         Print("ADJ");
+      
         Adj4 = true;
         sendSellOrder(false);
 
@@ -455,10 +558,7 @@ void OpenPositions()
 
         // ...
          Print("ADJ3");
-        /*if(ordertype == POSITION_TYPE_SELL)
-         //sendSellOrder(false);
-        else if(ordertype == POSITION_TYPE_BUY)
-         //sendBuyOrder(false);*/
+   
         Adj5 = true;
         sendSellOrder(false);
 
@@ -472,10 +572,7 @@ void OpenPositions()
 
         // ...
          Print("ADJ3");
-        /*if(ordertype == POSITION_TYPE_SELL)
-         //sendSellOrder(false);
-        else if(ordertype == POSITION_TYPE_BUY)
-         //sendBuyOrder(false);*/
+      
         Adj6 = true;
         sendSellOrder(false);
 
@@ -489,10 +586,7 @@ void OpenPositions()
 
         // ...
          Print("ADJ3");
-        /*if(ordertype == POSITION_TYPE_SELL)
-         //sendSellOrder(false);
-        else if(ordertype == POSITION_TYPE_BUY)
-         //sendBuyOrder(false);*/
+       
         Adj7 = true;
         sendSellOrder(false);
 
@@ -505,15 +599,11 @@ void OpenPositions()
         // Open position at 30 pips
 
         // ...
-         Print("ADJ3");
-        /*if(ordertype == POSITION_TYPE_SELL)
-         //sendSellOrder(false);
-        else if(ordertype == POSITION_TYPE_BUY)
-         //sendBuyOrder(false);*/
+     
         Adj8 = true;
         sendSellOrder(false);
 
-    }
+    }*/
     
    
 
@@ -556,14 +646,18 @@ void OnTick()
 
          }
       }*/
-   ClosePositionsIfProfitAbove(20);
+   ClosePositionsIfProfitAbove(takeProfit);
    //ClosePositionsIfOpenForFiveDays();
+   //CloseBuyPositions();
+   
    
    if(entry_made){
    
       
       OpenPositions();
      }
+     
+   
    /*Print("1: ", threshold10Pips);
    Print("2: ", threshold20Pips);
    Print("3: ", threshold30Pips);
@@ -608,7 +702,7 @@ void OnTick()
 
         // ...
         
-        countReps();
+        //countReps();
         sendSellOrder(true);
         
 
@@ -622,8 +716,9 @@ void OnTick()
 
         // ...
         
+      
        //sendBuyOrder();
-       Print("isBullishMorningStar");
+       //Print("isBullishMorningStar");
 
     }
 
@@ -634,7 +729,7 @@ void OnTick()
         // Execute bullish three inside up trading strategy
 
         // ...
-        
+      
         //Print("isBullishThreeInsideUp");
         
         //sendBuyOrder();
