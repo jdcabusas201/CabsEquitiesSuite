@@ -307,7 +307,7 @@ void ClosePositionsIfProfitAbove(double profitThreshold)
 }
 }
 
-void CloseBuyPositions()
+void CloseBuyPositions(double profitThreshold)
 {
     double overallProfit = 0;
     CTrade trade;
@@ -321,17 +321,108 @@ void CloseBuyPositions()
         } 
        
       }
-      if(overallProfit > 1){
+      if(overallProfit > profitThreshold){
          for (int i = PositionsTotal(); i >= 0; i--) {
         ulong ticket = PositionGetTicket(i);
         if (PositionSelectByTicket(ticket))
         {
          if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY)
             trade.PositionClose(ticket);
+            
+            buy_entry_made = false;
+      
+            Buythreshold10Pips = 0;
+            Buythreshold20Pips = 0;
+            Buythreshold30Pips = 0;
+            Buythreshold40Pips = 0;
+            Buythreshold50Pips = 0;
+            Buythreshold60Pips = 0;
+            Buythreshold70Pips = 0;
+            Buythreshold80Pips = 0;
+            
+           
+            
+            BAdj1 = false;
+            BAdj2 = false;
+            BAdj3 = false;
+            BAdj4 = false;
         } 
        
       }
       }
+   
+      
+      
+      /*threshold10Pips = 0;
+      threshold20Pips = 0;
+      threshold30Pips = 0;
+      threshold40Pips = 0;
+      threshold50Pips = 0;
+      threshold60Pips = 0;
+      threshold70Pips = 0;
+      threshold80Pips = 0;
+      
+      Adj1 = false;
+      Adj2 = false;
+      Adj3 = false;
+      Adj4 = false;
+      Adj5 = false;
+      Adj6 = false;
+      Adj7 = false;
+      Adj8 = false;
+      
+      entry_made = false;
+         
+     pips = PipAdj;*/
+
+}
+
+void CloseSellPositions(double profitThreshold)
+{
+    double overallProfit = 0;
+    CTrade trade;
+   
+      for (int i = PositionsTotal(); i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if (PositionSelectByTicket(ticket))
+        {
+         if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL)
+            overallProfit = overallProfit + PositionGetDouble(POSITION_PROFIT);
+        } 
+       
+      }
+      if(overallProfit > profitThreshold){
+         for (int i = PositionsTotal(); i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if (PositionSelectByTicket(ticket))
+        {
+         if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_SELL)
+            trade.PositionClose(ticket);
+            
+            sell_entry_made = false;
+      
+   
+      
+            Sellthreshold10Pips = 0;
+            Sellthreshold20Pips = 0;
+            Sellthreshold30Pips = 0;
+            Sellthreshold40Pips = 0;
+            Sellthreshold50Pips = 0;
+            Sellthreshold60Pips = 0;
+            Sellthreshold70Pips = 0;
+            Sellthreshold80Pips = 0;
+            
+        
+            
+            SAdj1 = false;
+            SAdj2 = false;
+            SAdj3 = false;
+            SAdj4 = false;
+        } 
+       
+      }
+      }
+      
       
       /*threshold10Pips = 0;
       threshold20Pips = 0;
@@ -556,8 +647,8 @@ void sendBuyOrder(bool initial)
           
             int points = 1000;
             Buythreshold10Pips = cost - (points * _Point);
-            Buythreshold20Pips = cost - (points * 2 * _Point);
-            Buythreshold30Pips = cost - (points * 3 * _Point);
+            Buythreshold20Pips = cost - (points * 3 * _Point);
+            Buythreshold30Pips = cost - (points * 5 * _Point);
             Buythreshold40Pips = cost - (points * 5 * _Point);
             Buythreshold50Pips = cost - (points * 8 * _Point);
             Buythreshold60Pips = cost - (points * 3 * _Point);
@@ -630,8 +721,8 @@ void sendSellOrder(bool initial)
           
             int points = 1000;
             Sellthreshold10Pips = cost + (points * _Point);
-            Sellthreshold20Pips = cost + (points * 2 * _Point);
-            Sellthreshold30Pips = cost + (points * 3 * _Point);
+            Sellthreshold20Pips = cost + (points * 3 * _Point);
+            Sellthreshold30Pips = cost + (points * 5 * _Point);
             Sellthreshold40Pips = cost + (points * 5 * _Point);
             Sellthreshold50Pips = cost + (points * 8 * _Point);
             Sellthreshold60Pips = cost + (points * 3 * _Point);
@@ -751,7 +842,7 @@ void AdjSellPositions()
 
     }
     
-       if (currentPrice >= Sellthreshold40Pips && SAdj4 == false && currentPrice > UpperBuffer[0] && currentPrice > last_sell_bb_price)
+       /*if (currentPrice >= Sellthreshold40Pips && SAdj4 == false && currentPrice > UpperBuffer[0] && currentPrice > last_sell_bb_price)
 
     {
 
@@ -766,7 +857,7 @@ void AdjSellPositions()
 
     }
     
-        /*if (currentPrice >= threshold50Pips && Adj5 == false)
+        if (currentPrice >= threshold50Pips && Adj5 == false)
 
     {
 
@@ -904,7 +995,7 @@ void AdjBuyPositions()
 
     }
     
-       if (currentPrice <= Buythreshold30Pips && BAdj4 == false && currentPrice < LowerBuffer[0] && currentPrice < last_buy_bb_price)
+       /*if (currentPrice <= Buythreshold30Pips && BAdj4 == false && currentPrice < LowerBuffer[0] && currentPrice < last_buy_bb_price)
 
     {
 
@@ -919,7 +1010,7 @@ void AdjBuyPositions()
 
     }
     
-        /*if (currentPrice >= threshold50Pips && Adj5 == false)
+        if (currentPrice >= threshold50Pips && Adj5 == false)
 
     {
 
@@ -1016,16 +1107,37 @@ void OnTick()
          }
       }*/
       
-   ClosePositionsIfProfitAbove(tp);   
-      
-   if((SAdj1 && !SAdj2 && !SAdj3) || (BAdj1 && !BAdj2 && !SAdj3))   
-      ClosePositionsIfProfitAbove(tp);
-   if((SAdj2 && !SAdj3) || (BAdj2 && !BAdj3))   
-      ClosePositionsIfProfitAbove(tp*2);
-   if((SAdj3 && !SAdj4) || (BAdj3 && !BAdj4))   
-      ClosePositionsIfProfitAbove(tp*10);
-   if(SAdj4 || BAdj4)   
-      ClosePositionsIfProfitAbove(tp*15);   
+   //ClosePositionsIfProfitAbove(tp);
+     
+   
+   
+   /*if(SAdj4 || BAdj4){   
+      //ClosePositionsIfProfitAbove(tp);
+      CloseBuyPositions(tp*5);
+      CloseSellPositions(tp*5);
+   } 
+   else */if((SAdj3 && !SAdj4) || (BAdj3 && !BAdj4)){   
+      //ClosePositionsIfProfitAbove(tp);
+      CloseBuyPositions(tp*4);
+      CloseSellPositions(tp*4);
+   }   
+   else if((SAdj2 && !SAdj3) || (BAdj2 && !BAdj3)){   
+   //ClosePositionsIfProfitAbove(tp);
+      CloseBuyPositions(tp*3);
+      CloseSellPositions(tp*3);
+   }
+   else if((SAdj1 && !SAdj2 && !SAdj3) || (BAdj1 && !BAdj2 && !SAdj3)){   
+      //ClosePositionsIfProfitAbove(tp);
+      CloseBuyPositions(tp*2);
+      CloseSellPositions(tp*2);
+   }else{
+      CloseBuyPositions(tp);
+      CloseSellPositions(tp); 
+   
+   }
+   
+   
+     
   
    double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
    
@@ -1039,7 +1151,7 @@ void OnTick()
    if((iClose(_Symbol, PERIOD_CURRENT,0) > UpperBuffer[0]) && ((UpperBuffer[0] - MiddleBuffer[0]) > 100 * _Point) && sell_entry_made == false){
  
       sendSellOrder(true);
-   }else if((iClose(_Symbol, PERIOD_CURRENT,0) < LowerBuffer[0]) && ((MathAbs(LowerBuffer[0] - MiddleBuffer[0])) > 100 * _Point) && buy_entry_made == false)
+   }else if((iClose(_Symbol, PERIOD_CURRENT,0) < LowerBuffer[0]) && (MiddleBuffer[0] - LowerBuffer[0]) > 100 * _Point && buy_entry_made == false)
       sendBuyOrder(true);
    
    //ClosePositionsIfOpenForFiveDays();
