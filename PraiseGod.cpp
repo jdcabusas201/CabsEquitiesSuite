@@ -4,7 +4,6 @@
 CTrade trade;  // Create an instance of the CTrade class
 COrderInfo orderInfo;
 // Inputs
-
 input ENUM_TIMEFRAMES HigherTimeframe = PERIOD_H1;
 
 input int MA_Period_Short = 50;
@@ -17,42 +16,243 @@ input double LotSize = 0.01;
 
 input double BalanceThreshold = 50;
 
-input int takeProfit = 10;
+input double takeProfit = 10;
+double tp = takeProfit;
 
 input double size1 = 0.01;
 input double size2 = 0.01;
 input double size3 = 0.01;
+input double size4 = 0.01;
 
 
-double threshold10Pips = 0;
 
-double threshold20Pips = 0;
+double Buythreshold10Pips = 0;
 
-double threshold30Pips = 0;
+double Buythreshold20Pips = 0;
 
-double threshold40Pips = 0;
+double Buythreshold30Pips = 0;
 
-double threshold50Pips = 0;
+double Buythreshold40Pips = 0;
 
-double threshold60Pips = 0;
+double Buythreshold50Pips = 0;
 
-double threshold70Pips = 0;
+double Buythreshold60Pips = 0;
 
-double threshold80Pips = 0;
+double Buythreshold70Pips = 0;
 
-bool Adj1 = false;
-bool Adj2 = false;
-bool Adj3 = false;
-bool Adj4 = false;
-bool Adj5 = false;
-bool Adj6 = false;
-bool Adj7 = false;
-bool Adj8 = false;
+double Buythreshold80Pips = 0;
 
-bool entry_made = false;
+double Sellthreshold10Pips = 0;
+
+double Sellthreshold20Pips = 0;
+
+double Sellthreshold30Pips = 0;
+
+double Sellthreshold40Pips = 0;
+
+double Sellthreshold50Pips = 0;
+
+double Sellthreshold60Pips = 0;
+
+double Sellthreshold70Pips = 0;
+
+double Sellthreshold80Pips = 0;
+
+bool BAdj1 = false;
+bool BAdj2 = false;
+bool BAdj3 = false;
+bool BAdj4 = false;
+
+bool SAdj1 = false;
+bool SAdj2 = false;
+bool SAdj3 = false;
+bool SAdj4 = false;
+
+bool sell_entry_made = false;
+bool buy_entry_made = false;
 bool draw_down = false;
+double last_sell_bb_price = 0;
+double last_buy_bb_price = 0;
 
 int repcount = 0;
+
+
+
+
+//BOLLINGER BANDS COPY AND PASTE FROM DOCS
+// ACCESS BANDS VALUES THRU BUFFER ARRAY INDEX (buffer[0])
+
+//--- indicator buffers
+double         UpperBuffer[];
+double         LowerBuffer[];
+double         MiddleBuffer[];
+
+double UpperBand, MiddleBand, LowerBand;
+datetime Time[];
+//int handler;
+
+enum Creation
+  {
+   Call_iBands,            // use iBands
+   Call_IndicatorCreate    // use IndicatorCreate
+  };
+//--- input parameters
+input Creation             type=Call_iBands;          // type of the function 
+input int                  bands_period=20;           // period of moving average
+input int                  bands_shift=0;             // shift
+input double               deviation=2.0;             // number of standard deviations 
+input ENUM_APPLIED_PRICE   applied_price=PRICE_CLOSE; // type of price
+input string               symbol=" ";                // symbol 
+input ENUM_TIMEFRAMES      period=PERIOD_CURRENT;     // timeframe
+
+//--- variable for storing the handle of the iBands indicator
+int    handler;
+//--- variable for storing
+string name=symbol;
+//--- name of the indicator on a chart
+string short_name;
+//--- we will keep the number of values in the Bollinger Bands indicator
+int    bars_calculated=0;
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+
+void OnInit()
+{
+   //--- assignment of arrays to indicator buffers
+   SetIndexBuffer(0,UpperBuffer,INDICATOR_DATA);
+   SetIndexBuffer(1,LowerBuffer,INDICATOR_DATA);
+   SetIndexBuffer(2,MiddleBuffer,INDICATOR_DATA);
+//--- set shift of each line
+   PlotIndexSetInteger(0,PLOT_SHIFT,bands_shift);
+   PlotIndexSetInteger(1,PLOT_SHIFT,bands_shift);      
+   PlotIndexSetInteger(2,PLOT_SHIFT,bands_shift);      
+//--- determine the symbol the indicator is drawn for
+   name=symbol;
+//--- delete spaces to the right and to the left
+   StringTrimRight(name);
+   StringTrimLeft(name);
+//--- if it results in zero length of the 'name' string
+   if(StringLen(name)==0)
+     {
+      //--- take the symbol of the chart the indicator is attached to
+      name=_Symbol;
+     }
+//--- create handle of the indicator
+   
+   handler=iBands(name,period,bands_period,bands_shift,deviation,applied_price);
+   //UpperBand =  UpperBuffer[0];
+   //MiddleBand =  MiddleBuffer[0];
+   //LowerBand =  LowerBuffer[0];
+   
+   
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
+  {
+//--- number of values copied from the iBands indicator
+   int values_to_copy;
+//--- determine the number of values calculated in the indicator
+   int calculated=BarsCalculated(handler);
+   if(calculated<=0)
+     {
+      PrintFormat("BarsCalculated() returned %d, error code %d",calculated,GetLastError());
+      return(0);
+     }
+//--- if it is the first start of calculation of the indicator or if the number of values in the iBands indicator changed
+//---or if it is necessary to calculated the indicator for two or more bars (it means something has changed in the price history)
+   if(prev_calculated==0 || calculated!=bars_calculated || rates_total>prev_calculated+1)
+     {
+      //--- if the size of indicator buffers is greater than the number of values in the iBands indicator for symbol/period, then we don't copy everything 
+      //--- otherwise, we copy less than the size of indicator buffers
+      if(calculated>rates_total) values_to_copy=rates_total;
+      else                       values_to_copy=calculated;
+     }
+   else
+     {
+      //--- it means that it's not the first time of the indicator calculation, and since the last call of OnCalculate()
+      //--- for calculation not more than one bar is added
+      values_to_copy=(rates_total-prev_calculated)+1;
+      
+     }
+//--- fill the array with values of the Bollinger Bands indicator
+//--- if FillArraysFromBuffer returns false, it means the information is nor ready yet, quit operation
+   if(!FillArraysFromBuffers(MiddleBuffer,UpperBuffer,LowerBuffer,bands_shift,handler,values_to_copy)) return(0);
+//--- form the message
+   string comm=StringFormat("%s ==>  Updated value in the indicator %s: %d",
+                            TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),
+                            short_name,
+                            values_to_copy);
+   
+    // Update the current values with the latest values from the indicator buffers
+   // Update the current values with the latest values from the indicator buffers
+
+
+//--- display the service message on the chart
+   Comment(comm);
+//--- memorize the number of values in the Bollinger Bands indicator
+   bars_calculated=calculated;
+//--- return the prev_calculated value for the next call
+   return(rates_total);
+  }
+//+------------------------------------------------------------------+
+//| Filling indicator buffers from the iBands indicator              |
+//+------------------------------------------------------------------+
+bool FillArraysFromBuffers(double &base_values[],     // indicator buffer of the middle line of Bollinger Bands
+                           double &upper_values[],    // indicator buffer of the upper border
+                           double &lower_values[],    // indicator buffer of the lower border
+                           int shift,                 // shift
+                           int ind_handle,            // handle of the iBands indicator
+                           int amount                 // number of copied values
+                           )
+  {
+//--- reset error code
+   ResetLastError();
+//--- fill a part of the MiddleBuffer array with values from the indicator buffer that has 0 index
+   if(CopyBuffer(ind_handle,0,-shift,amount,base_values)<0)
+     {
+      //--- if the copying fails, tell the error code
+      PrintFormat("Failed to copy data from the iBands indicator, error code %d",GetLastError());
+      //--- quit with zero result - it means that the indicator is considered as not calculated
+      return(false);
+     }
+ 
+//--- fill a part of the UpperBuffer array with values from the indicator buffer that has index 1
+   if(CopyBuffer(ind_handle,1,-shift,amount,upper_values)<0)
+     {
+      //--- if the copying fails, tell the error code
+      PrintFormat("Failed to copy data from the iBands indicator, error code %d",GetLastError());
+      //--- quit with zero result - it means that the indicator is considered as not calculated
+      return(false);
+     }
+ 
+//--- fill a part of the LowerBuffer array with values from the indicator buffer that has index 2
+   if(CopyBuffer(ind_handle,2,-shift,amount,lower_values)<0)
+     {
+      //--- if the copying fails, tell the error code
+      PrintFormat("Failed to copy data from the iBands indicator, error code %d",GetLastError());
+      //--- quit with zero result - it means that the indicator is considered as not calculated
+      return(false);
+     }
+//--- everything is fine
+      
+   return(true);
+  }
+//END OF BB CODE
+
+
 
 
 
@@ -72,25 +272,36 @@ void ClosePositionsIfProfitAbove(double profitThreshold)
         if (PositionSelectByTicket(ticket)) trade.PositionClose(ticket);
        
       }
-      threshold10Pips = 0;
-      threshold20Pips = 0;
-      threshold30Pips = 0;
-      threshold40Pips = 0;
-      threshold50Pips = 0;
-      threshold60Pips = 0;
-      threshold70Pips = 0;
-      threshold80Pips = 0;
+      Buythreshold10Pips = 0;
+      Buythreshold20Pips = 0;
+      Buythreshold30Pips = 0;
+      Buythreshold40Pips = 0;
+      Buythreshold50Pips = 0;
+      Buythreshold60Pips = 0;
+      Buythreshold70Pips = 0;
+      Buythreshold80Pips = 0;
       
-      Adj1 = false;
-      Adj2 = false;
-      Adj3 = false;
-      Adj4 = false;
-      Adj5 = false;
-      Adj6 = false;
-      Adj7 = false;
-      Adj8 = false;
+      Sellthreshold10Pips = 0;
+      Sellthreshold20Pips = 0;
+      Sellthreshold30Pips = 0;
+      Sellthreshold40Pips = 0;
+      Sellthreshold50Pips = 0;
+      Sellthreshold60Pips = 0;
+      Sellthreshold70Pips = 0;
+      Sellthreshold80Pips = 0;
       
-      entry_made = false;
+      BAdj1 = false;
+      BAdj2 = false;
+      BAdj3 = false;
+      BAdj4 = false;
+      
+      SAdj1 = false;
+      SAdj2 = false;
+      SAdj3 = false;
+      SAdj4 = false;
+      
+      sell_entry_made = false;
+      buy_entry_made = false;
          
      
 }
@@ -294,16 +505,16 @@ bool IsBearishThreeBlackCrows()
 void sendBuyOrder(bool initial)
 {
 
-        /*double size = LotSize;
-        if(Adj1)
-         size = 0.01;
-        if(Adj2)
-         size = 0.02;
-        if(Adj3)
-         size = 0.03;
-        if(Adj4)
-         size = 0.04;
-        if(Adj5)
+        double size = LotSize;
+        if(BAdj1)
+         size = size1;
+        if(BAdj2)
+         size = size2;
+        if(BAdj3)
+         size = size3;
+        if(BAdj4)
+         size = size4;
+        /*if(Adj5)
          size = 0.05;
         if(Adj6)
          size = 0.06;
@@ -311,28 +522,25 @@ void sendBuyOrder(bool initial)
          size = 0.07;
         if(Adj8)
          size = 0.08;*/        
-       
         
-        double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
-        double tp = 0;
+        double cost = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
       //if (order_type == ORDER_TYPE_SELL)
         //cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
-        if(draw_down)
-         tp =  cost + ( 50 * _Period);
+        
         string magic = " ";
         if(initial)
-         magic = "12";
+         magic = "9";
         
         MqlTradeRequest request = {};
         request.action = TRADE_ACTION_DEAL;
         request.symbol = Symbol();
-        request.volume = 0.02;
+        request.volume = size;
         request.type = ORDER_TYPE_BUY;
         request.price = cost;
         request.deviation = 2;
         request.comment = magic;
         request.type_filling = ORDER_FILLING_FOK;
-        //request.tp = cost + ( 50 * _Period);
+        //request.tp = 1;
         MqlTradeResult result;
 
         // SEND ORDER ONLY IF WE ARE WITHIN SET HOURS
@@ -344,24 +552,27 @@ void sendBuyOrder(bool initial)
         if (currentHour > 12 && currentHour < 20 && initial == true) {
           OrderSend(request, result);  // ORDER SEND
           //last_profit_level = cost;    // Update the last profit level
-            int points = 500;
-            threshold10Pips = cost - (points * _Point);
-            threshold20Pips = cost - (points * 2 * _Point);
-            threshold30Pips = cost - (points * 3 * _Point);
-            threshold40Pips = cost - (points * 5 * _Point);
-            threshold50Pips = cost - (points * 8 * _Point);
-            threshold60Pips = cost - (points * 3 * _Point);
-            threshold70Pips = cost - (points * 5 * _Point);
-            threshold80Pips = cost - (points * 8 * _Point);
-            entry_made = true;
+          
+          
+            int points = 1000;
+            Buythreshold10Pips = cost - (points * _Point);
+            Buythreshold20Pips = cost - (points * 2 * _Point);
+            Buythreshold30Pips = cost - (points * 3 * _Point);
+            Buythreshold40Pips = cost - (points * 5 * _Point);
+            Buythreshold50Pips = cost - (points * 8 * _Point);
+            Buythreshold60Pips = cost - (points * 3 * _Point);
+            Buythreshold70Pips = cost - (points * 5 * _Point);
+            Buythreshold80Pips = cost - (points * 8 * _Point);
+            buy_entry_made = true;
+            last_buy_bb_price = cost;
             
-            ObjectCreate(0,"My Line1",OBJ_HLINE,0,0,threshold10Pips);
-            ObjectCreate(0,"My Line2",OBJ_HLINE,0,0,threshold20Pips);
-            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,threshold30Pips);
+            ObjectCreate(0,"My Line1",OBJ_HLINE,0,0,Buythreshold10Pips);
+            ObjectCreate(0,"My Line2",OBJ_HLINE,0,0,Buythreshold20Pips);
+            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,Buythreshold30Pips);
+            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,Buythreshold40Pips);
             
         }else if(initial == false){
          OrderSend(request, result);
-      
         }
 }
 
@@ -369,14 +580,14 @@ void sendSellOrder(bool initial)
 {
       
         double size = LotSize;
-        if(Adj1)
+        if(SAdj1)
          size = size1;
-        if(Adj2)
+        if(SAdj2)
          size = size2;
-        if(Adj3)
+        if(SAdj3)
          size = size3;
-        //if(Adj4)
-         //size = 0.01;
+        if(SAdj4)
+         size = size4;
         /*if(Adj5)
          size = 0.05;
         if(Adj6)
@@ -418,20 +629,21 @@ void sendSellOrder(bool initial)
           
           
             int points = 1000;
-            threshold10Pips = cost + (points * _Point);
-            threshold20Pips = cost + (points * 2 * _Point);
-            threshold30Pips = cost + (points * 3 * _Point);
-            threshold40Pips = cost + (points * 5 * _Point);
-            threshold50Pips = cost + (points * 8 * _Point);
-            threshold60Pips = cost + (points * 3 * _Point);
-            threshold70Pips = cost + (points * 5 * _Point);
-            threshold80Pips = cost + (points * 8 * _Point);
-            entry_made = true;
+            Sellthreshold10Pips = cost + (points * _Point);
+            Sellthreshold20Pips = cost + (points * 2 * _Point);
+            Sellthreshold30Pips = cost + (points * 3 * _Point);
+            Sellthreshold40Pips = cost + (points * 5 * _Point);
+            Sellthreshold50Pips = cost + (points * 8 * _Point);
+            Sellthreshold60Pips = cost + (points * 3 * _Point);
+            Sellthreshold70Pips = cost + (points * 5 * _Point);
+            Sellthreshold80Pips = cost + (points * 8 * _Point);
+            sell_entry_made = true;
+            last_sell_bb_price = cost;
             
-            ObjectCreate(0,"My Line1",OBJ_HLINE,0,0,threshold10Pips);
-            ObjectCreate(0,"My Line2",OBJ_HLINE,0,0,threshold20Pips);
-            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,threshold30Pips);
-            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,threshold40Pips);
+            ObjectCreate(0,"My Line1",OBJ_HLINE,0,0,Sellthreshold10Pips);
+            ObjectCreate(0,"My Line2",OBJ_HLINE,0,0,Sellthreshold20Pips);
+            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,Sellthreshold30Pips);
+            ObjectCreate(0,"My Line3",OBJ_HLINE,0,0,Sellthreshold40Pips);
             
         }else if(initial == false){
          OrderSend(request, result);
@@ -462,7 +674,7 @@ void ClosePositionsIfOpenForFiveDays()
 
 
 
-void OpenPositions()
+void AdjSellPositions()
 
 {
 
@@ -479,7 +691,7 @@ void OpenPositions()
        //currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
 
     
-      if (currentPrice >= threshold10Pips && Adj1 == false)
+      if (currentPrice >= Sellthreshold10Pips && SAdj1 == false && currentPrice > UpperBuffer[0] && currentPrice > last_sell_bb_price)
     {
 
         // Open position at 10 pips
@@ -491,8 +703,9 @@ void OpenPositions()
         //else if(ordertype == POSITION_TYPE_BUY)
          //sendBuyOrder(false);
          
-        Adj1 = true; 
+        SAdj1 = true; 
         sendSellOrder(false);
+        last_sell_bb_price = currentPrice;
 
         
 
@@ -500,7 +713,7 @@ void OpenPositions()
 
  
 
-    if (currentPrice >= threshold20Pips && Adj2 == false)
+    if (currentPrice >= Sellthreshold20Pips && SAdj2 == false && currentPrice > UpperBuffer[0] && currentPrice > last_sell_bb_price)
 
     {
 
@@ -512,14 +725,15 @@ void OpenPositions()
         sendSellOrder(false);
         else if(ordertype == POSITION_TYPE_BUY)
          //sendBuyOrder(false); */
-        Adj2 = true;
+        SAdj2 = true;
         sendSellOrder(false);
+        last_sell_bb_price = currentPrice;
 
     }
 
  
 
-    if (currentPrice >= threshold30Pips && Adj3 == false)
+    if (currentPrice >= Sellthreshold30Pips && SAdj3 == false && currentPrice > UpperBuffer[0] && currentPrice > last_sell_bb_price)
 
     {
 
@@ -531,26 +745,28 @@ void OpenPositions()
          //sendSellOrder(false);
         else if(ordertype == POSITION_TYPE_BUY)
          //sendBuyOrder(false);*/
-        Adj3 = true;
+        SAdj3 = true;
         sendSellOrder(false);
+        last_sell_bb_price = currentPrice;
 
     }
     
-     /*   if (currentPrice >= threshold40Pips && Adj4 == false)
+       if (currentPrice >= Sellthreshold40Pips && SAdj4 == false && currentPrice > UpperBuffer[0] && currentPrice > last_sell_bb_price)
 
     {
 
         // Open position at 30 pips
 
         // ...
-         Print("ADJ");
+         Print("ADJ4");
       
-        Adj4 = true;
+        SAdj4 = true;
         sendSellOrder(false);
+        last_sell_bb_price = currentPrice;
 
     }
     
-        if (currentPrice >= threshold50Pips && Adj5 == false)
+        /*if (currentPrice >= threshold50Pips && Adj5 == false)
 
     {
 
@@ -609,6 +825,159 @@ void OpenPositions()
 
    }
    
+   
+ 
+void AdjBuyPositions()
+
+{
+
+    int magicNumber = 7;  // Specify the magic number for the positions
+
+    double pipValue = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+
+    double openPrice = 0.0;
+    
+    double target_price = 0;
+    
+    double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+    //if(ordertype == POSITION_TYPE_SELL)
+       //currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+
+    
+      if (currentPrice <= Buythreshold10Pips && BAdj1 == false && currentPrice < LowerBuffer[0] && currentPrice < last_buy_bb_price)
+    {
+
+        // Open position at 10 pips
+
+        // ...
+      
+        //if(ordertype == POSITION_TYPE_SELL)
+      
+        //else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);
+         
+        BAdj1 = true; 
+        sendBuyOrder(false);
+        last_buy_bb_price = currentPrice;
+
+        
+
+     }
+
+ 
+
+    if (currentPrice <= Buythreshold20Pips && BAdj2 == false && currentPrice < LowerBuffer[0] && currentPrice < last_buy_bb_price)
+
+    {
+
+        // Open position at 20 pips
+
+        // ...
+          Print("ADJ2");
+        /*if(ordertype == POSITION_TYPE_SELL)
+        sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false); */
+        BAdj2 = true;
+        sendBuyOrder(false);
+        last_buy_bb_price = currentPrice;
+
+    }
+
+ 
+
+     if (currentPrice <= Buythreshold30Pips && BAdj3 == false && currentPrice < LowerBuffer[0] && currentPrice < last_buy_bb_price)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+        /*if(ordertype == POSITION_TYPE_SELL)
+         //sendSellOrder(false);
+        else if(ordertype == POSITION_TYPE_BUY)
+         //sendBuyOrder(false);*/
+        BAdj3 = true;
+        sendBuyOrder(false);
+        last_buy_bb_price = currentPrice;
+
+    }
+    
+       if (currentPrice <= Buythreshold30Pips && BAdj4 == false && currentPrice < LowerBuffer[0] && currentPrice < last_buy_bb_price)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ");
+      
+        BAdj4 = true;
+        sendBuyOrder(false);
+        last_buy_bb_price = currentPrice;
+
+    }
+    
+        /*if (currentPrice >= threshold50Pips && Adj5 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+   
+        Adj5 = true;
+        sendSellOrder(false);
+
+    }
+    
+            if (currentPrice >= threshold50Pips && Adj6 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+      
+        Adj6 = true;
+        sendSellOrder(false);
+
+    }
+    
+            if (currentPrice >= threshold50Pips && Adj7 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+         Print("ADJ3");
+       
+        Adj7 = true;
+        sendSellOrder(false);
+
+    }
+    
+            if (currentPrice >= threshold50Pips && Adj8 == false)
+
+    {
+
+        // Open position at 30 pips
+
+        // ...
+     
+        Adj8 = true;
+        sendSellOrder(false);
+
+    }*/
+    
+   
+
+   } 
+
 void countReps()
 {
     // Calculate the arrow coordinates
@@ -646,17 +1015,43 @@ void OnTick()
 
          }
       }*/
-   ClosePositionsIfProfitAbove(takeProfit);
+      
+   ClosePositionsIfProfitAbove(tp);   
+      
+   if((SAdj1 && !SAdj2 && !SAdj3) || (BAdj1 && !BAdj2 && !SAdj3))   
+      ClosePositionsIfProfitAbove(tp);
+   if((SAdj2 && !SAdj3) || (BAdj2 && !BAdj3))   
+      ClosePositionsIfProfitAbove(tp*2);
+   if((SAdj3 && !SAdj4) || (BAdj3 && !BAdj4))   
+      ClosePositionsIfProfitAbove(tp*10);
+   if(SAdj4 || BAdj4)   
+      ClosePositionsIfProfitAbove(tp*15);   
+  
+   double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+   
+   CopyBuffer(handler,1,-bands_shift,10,UpperBuffer);
+   CopyBuffer(handler,0,-bands_shift,10,MiddleBuffer);
+   CopyBuffer(handler,2,-bands_shift,10,LowerBuffer);
+   //Print("UpperBuffer: ", UpperBuffer[0]);
+   //Print("MiddleBuffer: ", MiddleBuffer[0]);
+   //Print("LowerBuffer: ", LowerBuffer[0]);
+   
+   if((iClose(_Symbol, PERIOD_CURRENT,0) > UpperBuffer[0]) && ((UpperBuffer[0] - MiddleBuffer[0]) > 100 * _Point) && sell_entry_made == false){
+ 
+      sendSellOrder(true);
+   }else if((iClose(_Symbol, PERIOD_CURRENT,0) < LowerBuffer[0]) && ((MathAbs(LowerBuffer[0] - MiddleBuffer[0])) > 100 * _Point) && buy_entry_made == false)
+      sendBuyOrder(true);
+   
    //ClosePositionsIfOpenForFiveDays();
    //CloseBuyPositions();
    
    
-   if(entry_made){
-   
-      
-      OpenPositions();
+   if(sell_entry_made){
+      AdjSellPositions();
      }
-     
+   if(buy_entry_made){
+      AdjBuyPositions();
+     }
    
    /*Print("1: ", threshold10Pips);
    Print("2: ", threshold20Pips);
@@ -703,7 +1098,7 @@ void OnTick()
         // ...
         
         //countReps();
-        sendSellOrder(true);
+        //sendSellOrder(true);
         
 
     }
