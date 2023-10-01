@@ -1333,32 +1333,32 @@ void OnTick()
   //Print("iClose(_Symbol, PERIOD_CURRENT,0): ", iClose(_Symbol, PERIOD_CURRENT,0));
 
   if (SAdj8 || BAdj8) {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   } else if ((SAdj7 && !SAdj8) || (BAdj7 && !BAdj8)) {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   } else if ((SAdj6 && !SAdj7) || (BAdj6 && !BAdj7)) {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   } else if ((SAdj5 && !SAdj6) || (BAdj5 && !BAdj6)) {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   } else if ((SAdj4 && !SAdj5) || (BAdj4 && !BAdj5)) {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   } else if ((SAdj3 && !SAdj4) || (BAdj3 && !BAdj4)) {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   } else if ((SAdj2 && !SAdj3) || (BAdj2 && !BAdj3)) {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   } else if ((SAdj1 && !SAdj2) || (BAdj1 && !BAdj2)) {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   } else {
-    CloseBuyPositions(tp, middle - (100 * _Point));
-    CloseSellPositions(tp, middle + (100 * _Point));
+    CloseBuyPositions(tp, middle - (200 * _Point));
+    CloseSellPositions(tp, middle + (200 * _Point));
   }
 
 
@@ -1377,7 +1377,7 @@ void OnTick()
   //Print("1 ", _Symbol, (SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower -10 * _Point)));
   //Print("2 ", ((middle - lower) > (50 * _Point)));
   //Print("3 ", (middle - lower) < (500 * _Point));
-  if ((SymbolInfoDouble(_Symbol, SYMBOL_ASK)>= (upper - 50 * _Point)) && ((upper - middle) > 500 * _Point)) {
+  if ((SymbolInfoDouble(_Symbol, SYMBOL_ASK)>= (upper - 150 * _Point)) && ((upper - middle) > 700 * _Point)) {
     //Print("Sell");
     if(sell_entry_made == false && buy_entry_made == false){
       sendSellOrder(true);
@@ -1385,7 +1385,7 @@ void OnTick()
     AdjSellPositions();
     }
     
-  } else if ((SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower + 50 * _Point)) && (middle - lower) > 500 * _Point) {
+  } else if ((SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower + 150 * _Point)) && (middle - lower) > 700 * _Point) {
     //Print("BUY");
     if(sell_entry_made == false && buy_entry_made == false){
       sendBuyOrder(true);
