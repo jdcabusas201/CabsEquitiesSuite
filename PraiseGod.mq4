@@ -17,7 +17,8 @@ input double LotSize = 0.01;
 input double BalanceThreshold = 50;
 
 input double takeProfit = 10;
-input int points = 1000;
+input double distance = 1000;
+input double points = 1000;
 double tp = takeProfit;
 
 input double size1 = 0.01;
@@ -655,22 +656,8 @@ datetime lastBuyOrderTime = 0;
 void sendBuyOrder(bool initial) {
 
   double size = LotSize;
-  if (BAdj1)
-    size = size1;
-  if (BAdj2)
-    size = size2;
-  if (BAdj3)
-    size = size3;
-  if (BAdj4)
-    size = size4;
-  if(BAdj5)
-   size = size5;
-  if(BAdj6)
-   size = size6;
-  if(BAdj7)
-   size = size7;
-  if(BAdj8)
-   size = size8;
+  
+   
 
   double cost = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
   //if (order_type == ORDER_TYPE_SELL)
@@ -723,8 +710,44 @@ void sendBuyOrder(bool initial) {
     }
 
   } else if (initial == false && buy_entry_made) {
+  
+         if (BAdj1)
+          size = size1;
+        if (BAdj2)
+          size = size2;
+        if (BAdj3)
+          size = size3;
+        if (BAdj4)
+          size = size4;
+        if(BAdj5)
+         size = size5;
+        if(BAdj6)
+         size = size6;
+        if(BAdj7)
+         size = size7;
+        if(BAdj8)
+         size = size8;
+      
     if(OrderSend(Symbol(), OP_BUY, size, cost, slippage, 0, 0, 0, 0, 0, clrNONE)){
+      if (!BAdj1) {
+    BAdj1 = true;
+   } else if (!BAdj2) {
+       BAdj2 = true;
+   } else if (!BAdj3) {
+       BAdj3 = true;
+   } else if (!BAdj4) {
+       BAdj4 = true;
+   } else if (!BAdj5) {
+       BAdj5 = true;
+   } else if (!BAdj6) {
+       BAdj6 = true;
+   } else if (!BAdj7) {
+       BAdj7 = true;
+   } else if (!BAdj8) {
+       BAdj8 = true;
+   }
       lastBuyOrderTime = currentTime;
+      last_buy_bb_price = cost;
     }
   }
 }
@@ -734,22 +757,7 @@ datetime lastSellOrderTime = 0;
 void sendSellOrder(bool initial) {
 
   double size = LotSize;
-  if (SAdj1)
-    size = size1;
-  if (SAdj2)
-    size = size2;
-  if (SAdj3)
-    size = size3;
-  if (SAdj4)
-    size = size4;
-  if(SAdj5)
-   size = size5;
-  if(SAdj6)
-   size =size6;
-  if(SAdj7)
-   size = size7;
-  if(SAdj8)
-   size = size8;
+
 
   double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
   //if (order_type == ORDER_TYPE_SELL)
@@ -801,8 +809,45 @@ void sendSellOrder(bool initial) {
     }
 
   } else if (initial == false && sell_entry_made) {
+      if (SAdj1)
+    size = size1;
+     if (SAdj2)
+       size = size2;
+     if (SAdj3)
+       size = size3;
+     if (SAdj4)
+       size = size4;
+     if(SAdj5)
+      size = size5;
+     if(SAdj6)
+      size =size6;
+     if(SAdj7)
+      size = size7;
+     if(SAdj8)
+      size = size8;
+
+ 
     if(OrderSend(Symbol(), OP_SELL, size, cost, slippage, 0, 0, 0, 0, 0, clrNONE)){
+    
+        if (!SAdj1) {
+       SAdj1 = true;
+   } else if (!SAdj2) {
+       SAdj2 = true;
+   } else if (!SAdj3) {
+       SAdj3 = true;
+   } else if (!SAdj4) {
+       SAdj4 = true;
+   } else if (!SAdj5) {
+       SAdj5 = true;
+   } else if (!SAdj6) {
+       SAdj6 = true;
+   } else if (!SAdj7) {
+       SAdj7 = true;
+   } else if (!SAdj8) {
+       SAdj8 = true;
+   }
       lastSellOrderTime = currentTime;
+      last_sell_bb_price = cost;
      }
   }
 }
@@ -900,7 +945,7 @@ void AdjSellPositions()
   //if(ordertype == POSITION_TYPE_SELL)
   //currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
 
-  if (currentPrice >= Sellthreshold10Pips && SAdj1 == false  && currentPrice > last_sell_bb_price + (100 * _Point) && SellA1) {
+  if (currentPrice >= last_sell_bb_price + (distance * _Point) && SAdj1 == false && SellA1) {
 
     // Open position at 10 pips
 
@@ -911,13 +956,13 @@ void AdjSellPositions()
     //else if(ordertype == POSITION_TYPE_BUY)
     //sendBuyOrder(false);
     Print("SADJ1");
-    SAdj1 = true;
+  
     sendSellOrder(false);
-    last_sell_bb_price = currentPrice;
+  
 
   }
 
-  if (currentPrice >= Sellthreshold20Pips && SAdj2 == false && currentPrice > last_sell_bb_price + (100 * _Point) && SellA2)
+  if (currentPrice >= last_sell_bb_price + (distance * _Point) && SAdj2 == false  && SellA2)
 
   {
 
@@ -929,13 +974,13 @@ void AdjSellPositions()
     sendSellOrder(false);
     else if(ordertype == POSITION_TYPE_BUY)
      //sendBuyOrder(false); */
-    SAdj2 = true;
+
     sendSellOrder(false);
-    last_sell_bb_price = currentPrice;
+
 
   }
 
-  if (currentPrice >= Sellthreshold30Pips && SAdj3 == false && currentPrice > last_sell_bb_price + (100 * _Point) && SellA3)
+  if (currentPrice >= last_sell_bb_price + (distance * _Point) && SAdj3 == false  && SellA3)
 
   {
 
@@ -947,13 +992,13 @@ void AdjSellPositions()
      //sendSellOrder(false);
     else if(ordertype == POSITION_TYPE_BUY)
      //sendBuyOrder(false);*/
-    SAdj3 = true;
+    
     sendSellOrder(false);
-    last_sell_bb_price = currentPrice;
+  
 
   }
 
-  if (currentPrice >= Sellthreshold40Pips && SAdj4 == false && currentPrice > last_sell_bb_price + (100 * _Point) && SellA4)
+  if (currentPrice >= last_sell_bb_price + (distance * _Point)&& SAdj4 == false && SellA4)
 
     {
 
@@ -962,13 +1007,13 @@ void AdjSellPositions()
         // ...
          Print("ADJ4");
       
-        SAdj4 = true;
+      
         sendSellOrder(false);
-        last_sell_bb_price = currentPrice;
+      
 
     }
     
-        if (currentPrice >= Sellthreshold50Pips && SAdj5 == false && currentPrice > last_sell_bb_price + (100 * _Point) && SellA5)
+        if (currentPrice >= last_sell_bb_price + (distance * _Point) && SAdj5 == false  && SellA5)
 
     {
 
@@ -977,45 +1022,41 @@ void AdjSellPositions()
         // ...
          Print("ADJ5");
    
-        SAdj5 = true;
         sendSellOrder(false);
-        last_sell_bb_price = currentPrice;
+       
 
     }
     
-            if (currentPrice >= Sellthreshold60Pips && SAdj6 == false && currentPrice > last_sell_bb_price + (100 * _Point) && SellA6)
+            if (currentPrice >= last_sell_bb_price + (distance * _Point) && SAdj6 == false && SellA6)
 
     {
 
         Print("ADJ6");
       
-        SAdj6 = true;
         sendSellOrder(false);
-        last_sell_bb_price = currentPrice;
-
+       
     }
     
-            if (currentPrice >= Sellthreshold70Pips && SAdj7 == false && currentPrice > last_sell_bb_price + (100 * _Point) && SellA7)
+            if (currentPrice >= last_sell_bb_price + (distance * _Point) && SAdj7 == false  && SellA7)
 
     {
 
         Print("ADJ7");
       
-        SAdj7 = true;
+      
         sendSellOrder(false);
-        last_sell_bb_price = currentPrice;
+      
 
     }
     
-            if (currentPrice >= Sellthreshold80Pips && SAdj8 == false && currentPrice > last_sell_bb_price + (100 * _Point) && SellA8)
+            if (currentPrice >= last_sell_bb_price + (distance * _Point) && SAdj8 == false && SellA8)
 
     {
 
         Print("ADJ8");
       
-        SAdj8 = true;
         sendSellOrder(false);
-        last_sell_bb_price = currentPrice;
+       
 
     }
 
@@ -1037,7 +1078,7 @@ void AdjBuyPositions()
   //if(ordertype == POSITION_TYPE_SELL)
   //currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
 
-  if (currentPrice <= Buythreshold10Pips && BAdj1 == false && BuyA1) {
+  if (currentPrice <= last_buy_bb_price - (distance * _Point) && BAdj1 == false && BuyA1) {
 
     // Open position at 10 pips
 
@@ -1047,14 +1088,12 @@ void AdjBuyPositions()
 
     //else if(ordertype == POSITION_TYPE_BUY)
     //sendBuyOrder(false);
-    Print("BADJ1");
-    BAdj1 = true;
     sendBuyOrder(false);
     last_buy_bb_price = currentPrice;
 
   }
 
-  if (currentPrice <= Buythreshold20Pips && BAdj2 == false && currentPrice < last_buy_bb_price - (100 * _Point) && BuyA2)
+  if (currentPrice <= last_buy_bb_price - (distance * _Point) && BAdj2 == false  && BuyA2)
 
   {
 
@@ -1072,7 +1111,7 @@ void AdjBuyPositions()
 
   }
 
-  if (currentPrice <= Buythreshold30Pips && BAdj3 == false && currentPrice < last_buy_bb_price - (100 * _Point) && BuyA3)
+  if (currentPrice <= last_buy_bb_price - (distance * _Point) && BAdj3 == false  && BuyA3)
 
   {
 
@@ -1084,13 +1123,13 @@ void AdjBuyPositions()
      //sendSellOrder(false);
     else if(ordertype == POSITION_TYPE_BUY)
      //sendBuyOrder(false);*/
-    BAdj3 = true;
+    
     sendBuyOrder(false);
-    last_buy_bb_price = currentPrice;
+  
 
   }
 
-  if (currentPrice <= Buythreshold40Pips && BAdj4 == false && currentPrice < last_buy_bb_price - (100 * _Point)  && BuyA4)
+  if (currentPrice <= last_buy_bb_price - (distance * _Point) && BAdj4 == false  && BuyA4)
 
     {
 
@@ -1099,13 +1138,13 @@ void AdjBuyPositions()
         // ...
          Print("ADJ4");
       
-        BAdj4 = true;
+     
         sendBuyOrder(false);
-        last_buy_bb_price = currentPrice;
+       
 
     }
     
-        if (currentPrice <= Buythreshold50Pips && BAdj5 == false && currentPrice < last_buy_bb_price - (100 * _Point) && BuyA5)
+        if (currentPrice <= last_buy_bb_price - (distance * _Point) && BAdj5 == false && BuyA5)
 
     {
 
@@ -1114,13 +1153,13 @@ void AdjBuyPositions()
         // ...
          Print("ADJ5");
       
-        BAdj5 = true;
+      
         sendBuyOrder(false);
-        last_buy_bb_price = currentPrice;
+        
 
     }
     
-            if (currentPrice <= Buythreshold60Pips && BAdj6 == false && currentPrice < last_buy_bb_price - (100 * _Point)  && BuyA6)
+            if (currentPrice <= last_buy_bb_price - (distance * _Point) && BAdj6 == false   && BuyA6)
 
     {
 
@@ -1129,33 +1168,32 @@ void AdjBuyPositions()
         // ...
         Print("ADJ6");
       
-        BAdj6 = true;
+      
         sendBuyOrder(false);
-        last_buy_bb_price = currentPrice;
+        
 
     }
     
-            if (currentPrice <= Buythreshold70Pips && BAdj7 == false && currentPrice < last_buy_bb_price - (100 * _Point)  && BuyA7)
+            if (currentPrice <= last_buy_bb_price - (distance * _Point) && BAdj7 == false   && BuyA7)
 
     {
 
         Print("ADJ7");
       
-        BAdj7 = true;
+  
         sendBuyOrder(false);
-        last_buy_bb_price = currentPrice;
-
+       
     }
     
-            if (currentPrice <= Buythreshold80Pips && BAdj8 == false && currentPrice < last_buy_bb_price - (100 * _Point)  && BuyA8)
+            if (currentPrice <= last_buy_bb_price - (distance * _Point) && BAdj8 == false   && BuyA8)
 
     {
 
         Print("ADJ8");
       
-        BAdj8 = true;
+    
         sendBuyOrder(false);
-        last_buy_bb_price = currentPrice;;
+       
 
     }
 
@@ -1257,7 +1295,7 @@ void OnTick()
    //Print("sell ",_Symbol, sell_entry_made);
   double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
   // Calculate the Bollinger Bands
-  int period = 20;
+  int period = 50;
   double deviation = 2.0;
   int applied_price = PRICE_CLOSE;
 
@@ -1274,32 +1312,32 @@ void OnTick()
   //Print("iClose(_Symbol, PERIOD_CURRENT,0): ", iClose(_Symbol, PERIOD_CURRENT,0));
 
   if (SAdj8 || BAdj8) {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   } else if ((SAdj7 && !SAdj8) || (BAdj7 && !BAdj8)) {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   } else if ((SAdj6 && !SAdj7) || (BAdj6 && !BAdj7)) {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   } else if ((SAdj5 && !SAdj6) || (BAdj5 && !BAdj6)) {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   } else if ((SAdj4 && !SAdj5) || (BAdj4 && !BAdj5)) {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   } else if ((SAdj3 && !SAdj4) || (BAdj3 && !BAdj4)) {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   } else if ((SAdj2 && !SAdj3) || (BAdj2 && !BAdj3)) {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   } else if ((SAdj1 && !SAdj2) || (BAdj1 && !BAdj2)) {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   } else {
-    CloseBuyPositions(tp, upper - (20 * _Point));
-    CloseSellPositions(tp, lower + (20 * _Point));
+    CloseBuyPositions(tp, middle - (20 * _Point));
+    CloseSellPositions(tp, middle + (20 * _Point));
   }
 
 
@@ -1318,7 +1356,7 @@ void OnTick()
   //Print("1 ", _Symbol, (SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower -10 * _Point)));
   //Print("2 ", ((middle - lower) > (50 * _Point)));
   //Print("3 ", (middle - lower) < (500 * _Point));
-  if ((SymbolInfoDouble(_Symbol, SYMBOL_ASK)>= (upper + 10 * _Point)) && ((upper - middle) > 50 * _Point) && ((upper - middle) < 350 * _Point)) {
+  if ((SymbolInfoDouble(_Symbol, SYMBOL_ASK)>= (upper + 10 * _Point)) && ((upper - middle) < 350 * _Point)) {
     Print("Sell");
     if(sell_entry_made == false && buy_entry_made == false){
       sendSellOrder(true);
@@ -1326,7 +1364,7 @@ void OnTick()
     AdjSellPositions();
     }
     
-  } else if ((SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower - 10 * _Point)) && ((middle - lower) > 50 * _Point) && (middle - lower) < 350 * _Point) {
+  } else if ((SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower - 10 * _Point)) && (middle - lower) < 350 * _Point) {
     Print("BUY");
     if(sell_entry_made == false && buy_entry_made == false){
       sendBuyOrder(true);
@@ -1468,4 +1506,3 @@ void OnTick()
   // ...
 
 }
-
