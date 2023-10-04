@@ -702,7 +702,7 @@ void sendBuyOrder(bool initial) {
      //   return;
    // }
 
-  if (((currentHour > 21 && currentHour < 1) || (currentHour > 6 && currentHour < 8)||(currentHour > 12 && currentHour < 14)) && initial == true) {
+  if (/*((currentHour > 21 && currentHour < 1) || (currentHour > 6 && currentHour < 8)||(currentHour > 12 && currentHour < 14)) && */initial == true) {
     if(OrderSend(Symbol(), OP_BUY, size, cost, slippage, 0, 0, magic, 0, 0, clrNONE)){ // ORDER SEND
     //last_profit_level = cost;    // Update the last profit level
 
@@ -819,7 +819,7 @@ void sendSellOrder(bool initial) {
         //Print("Too soon to send another buy order");
         //return;
     //}
-  if (currentHour > 1 && currentHour < 22 && initial == true) {
+  if (/*((currentHour > 21 && currentHour < 1) || (currentHour > 6 && currentHour < 8)||(currentHour > 12 && currentHour < 14)) && */initial == true) {
     if(OrderSend(Symbol(), OP_SELL, size, cost, slippage, 0, 0, magic, 0, 0, clrNONE)){ // ORDER SEND
     //last_profit_level = cost;    // Update the last profit level
 
