@@ -30,8 +30,13 @@ input double size5 = 0.01;
 input double size6 = 0.01;
 input double size7 = 0.01;
 input double size8 = 0.01;
+input double size9 = 0.01;
+input double size10 = 0.01;
+input double size11 = 0.01;
 double max = 0;
 double min = 0;
+
+bool close_flag = false;
 
 double upper, middle, lower;
 
@@ -75,6 +80,9 @@ input bool BuyA5 = true;
 input bool BuyA6 = true;
 input bool BuyA7 = true;
 input bool BuyA8 = true;
+input bool BuyA9 = true;
+input bool BuyA10 = true;
+input bool BuyA11 = true;
 
 input bool SellA1 = true;
 input bool SellA2 = true;
@@ -84,6 +92,9 @@ input bool SellA5 = true;
 input bool SellA6 = true;
 input bool SellA7 = true;
 input bool SellA8 = true;
+input bool SellA9 = true;
+input bool SellA10 = true;
+input bool SellA11 = true;
 
 bool BAdj1 = false;
 bool BAdj2 = false;
@@ -93,6 +104,9 @@ bool BAdj5 = false;
 bool BAdj6 = false;
 bool BAdj7 = false;
 bool BAdj8 = false;
+bool BAdj9 = false;
+bool BAdj10 = false;
+bool BAdj11 = false;
 
 bool SAdj1 = false;
 bool SAdj2 = false;
@@ -102,6 +116,9 @@ bool SAdj5 = false;
 bool SAdj6 = false;
 bool SAdj7 = false;
 bool SAdj8 = false;
+bool SAdj9 = false;
+bool SAdj10 = false;
+bool SAdj11 = false;
 
 
 
@@ -685,7 +702,7 @@ void sendBuyOrder(bool initial) {
      //   return;
    // }
 
-  if (currentHour > 1 && currentHour < 22 && initial == true) {
+  if (((currentHour > 21 && currentHour < 1) || (currentHour > 6 && currentHour < 8)||(currentHour > 12 && currentHour < 14)) && initial == true) {
     if(OrderSend(Symbol(), OP_BUY, size, cost, slippage, 0, 0, magic, 0, 0, clrNONE)){ // ORDER SEND
     //last_profit_level = cost;    // Update the last profit level
 
@@ -731,6 +748,12 @@ void sendBuyOrder(bool initial) {
        BAdj7 = true;
    } else if (!BAdj8) {
        BAdj8 = true;
+   } else if (!BAdj9) {
+       BAdj6 = true;
+   } else if (!BAdj10) {
+       BAdj7 = true;
+   } else if (!BAdj11) {
+       BAdj8 = true;
    }
    
          if (BAdj1)
@@ -748,6 +771,12 @@ void sendBuyOrder(bool initial) {
         if(BAdj7)
          size = size7;
         if(BAdj8)
+         size = size8;
+        if(BAdj9)
+         size = size6;
+        if(BAdj10)
+         size = size7;
+        if(BAdj11)
          size = size8;
       
     if(OrderSend(Symbol(), OP_BUY, size, cost, slippage, 0, 0, 0, 0, 0, clrNONE)){
@@ -834,7 +863,11 @@ void sendSellOrder(bool initial) {
        SAdj6 = true;
    } else if (!SAdj7) {
        SAdj7 = true;
-   } else if (!SAdj8) {
+   } else if (!SAdj9) {
+       SAdj8 = true;
+   } else if (!SAdj10) {
+       SAdj7 = true;
+   } else if (!SAdj11) {
        SAdj8 = true;
    }
       
@@ -853,6 +886,12 @@ void sendSellOrder(bool initial) {
      if(SAdj7)
       size = size7;
      if(SAdj8)
+      size = size8;
+     if(SAdj9)
+      size =size6;
+     if(SAdj10)
+      size = size7;
+     if(SAdj11)
       size = size8;
 
  
@@ -880,11 +919,12 @@ void ClosePositionsIfOpenForFiveDays() {
         datetime currentTime = TimeCurrent();
         //Print("currentTime", currentTime);
 
-        int timeDifference = (int)(currentTime - entryTime); // Calculate the time difference in seconds
-        timeDifference = timeDifference / 86400;
-        //Print("timeDifference", timeDifference);
+      int timeDifference = (int)(currentTime - entryTime); // Calculate the time difference in seconds
+      timeDifference = timeDifference / 60; // Convert seconds to hours
+      //Print("timeDifference", timeDifference)
 
-        if ((timeDifference >= 1 && AccountInfoDouble(ACCOUNT_PROFIT) < -20 /*&& ClosePositionsIfEquityBelowPercentOfBalance(51)*/)) {
+
+        if ((timeDifference >= 60 && AccountInfoDouble(ACCOUNT_PROFIT) < 0 /*&& ClosePositionsIfEquityBelowPercentOfBalance(51)*/)) {
           Print("CLOSE");
           for (i = OrdersTotal() - 1; i >= 0; i--) {
             if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
@@ -893,6 +933,7 @@ void ClosePositionsIfOpenForFiveDays() {
                   // Position closed successfully
                   sell_entry_made = false;
                   buy_entry_made = false;
+                  close_flag = true;
 
                   Sellthreshold10Pips = 0;
                   Sellthreshold20Pips = 0;
@@ -920,6 +961,9 @@ void ClosePositionsIfOpenForFiveDays() {
                   SAdj6 = false;
                   SAdj7 = false;
                   SAdj8 = false;
+                  SAdj9 = false;
+                  SAdj10 = false;
+                  SAdj11 = false;
                   BAdj1 = false;
                   BAdj2 = false;
                   BAdj3 = false;
@@ -928,6 +972,9 @@ void ClosePositionsIfOpenForFiveDays() {
                   BAdj6 = false;
                   BAdj7 = false;
                   BAdj8 = false;
+                  BAdj9 = false;
+                  BAdj10 = false;
+                  BAdj11 = false;
                 }
               }
             }
@@ -1073,6 +1120,38 @@ void AdjSellPositions()
        
 
     }
+    
+    if (currentPrice >= last_sell_bb_price + (distance) && SAdj9 == false && SellA9)
+
+    {
+
+        Print("ADJ6");
+      
+        sendSellOrder(false);
+       
+    }
+    
+            if (currentPrice >= last_sell_bb_price + (distance) && SAdj10 == false  && SellA10)
+
+    {
+
+        Print("ADJ7");
+      
+      
+        sendSellOrder(false);
+      
+
+    }
+    
+            if (currentPrice >= last_sell_bb_price + (distance) && SAdj11 == false && SellA11)
+    {
+
+        Print("ADJ8");
+      
+        sendSellOrder(false);
+       
+
+    }
 
 }
 
@@ -1210,6 +1289,42 @@ void AdjBuyPositions()
        
 
     }
+    
+    if (currentPrice <= last_buy_bb_price - (distance) && BAdj9 == false   && BuyA9)
+
+    {
+
+        Print("ADJ8");
+      
+    
+        sendBuyOrder(false);
+       
+
+    }
+    
+    if (currentPrice <= last_buy_bb_price - (distance) && BAdj10 == false   && BuyA10)
+
+    {
+
+        Print("ADJ8");
+      
+    
+        sendBuyOrder(false);
+       
+
+    }
+    
+    if (currentPrice <= last_buy_bb_price - (distance) && BAdj11 == false   && BuyA11)
+
+    {
+
+        Print("ADJ8");
+      
+    
+        sendBuyOrder(false);
+       
+
+    }
 
 }
 
@@ -1297,31 +1412,76 @@ void CheckOpenPositions()
     }
 }
 
+void closeAll(){
 
+int slippage = int(2.0 * (Ask - Bid) / _Point);
+   
+
+for (int i = OrdersTotal() - 1; i >= 0; i--) {
+            if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+              if (OrderSymbol() == _Symbol) {
+                if (OrderClose(OrderTicket(), OrderLots(), MarketInfo(OrderSymbol(), MODE_ASK), slippage, 0)) {
+                  // Position closed successfully
+                  sell_entry_made = false;
+                  buy_entry_made = false;
+
+                  Sellthreshold10Pips = 0;
+                  Sellthreshold20Pips = 0;
+                  Sellthreshold30Pips = 0;
+                  Sellthreshold40Pips = 0;
+                  Sellthreshold50Pips = 0;
+                  Sellthreshold60Pips = 0;
+                  Sellthreshold70Pips = 0;
+                  Sellthreshold80Pips = 0;
+
+                  Buythreshold10Pips = 0;
+                  Buythreshold20Pips = 0;
+                  Buythreshold30Pips = 0;
+                  Buythreshold40Pips = 0;
+                  Buythreshold50Pips = 0;
+                  Buythreshold60Pips = 0;
+                  Buythreshold70Pips = 0;
+                  Buythreshold80Pips = 0;
+
+                  SAdj1 = false;
+                  SAdj2 = false;
+                  SAdj3 = false;
+                  SAdj4 = false;
+                  SAdj5 = false;
+                  SAdj6 = false;
+                  SAdj7 = false;
+                  SAdj8 = false;
+                  BAdj1 = false;
+                  BAdj2 = false;
+                  BAdj3 = false;
+                  BAdj4 = false;
+                  BAdj5 = false;
+                  BAdj6 = false;
+                  BAdj7 = false;
+                  BAdj8 = false;
+                }
+              }
+            }
+          }
+}
 
 void OnTick()
 
 {
    DrawBidAskLines();
-   double val = AccountInfoDouble(ACCOUNT_PROFIT);
-   if(val < min){
-      min = val;
-      Print("MAX DD: ",min);
-      Print("MAX PROFIT: ", max);
-      }
+   double overallProfit = 0;
+    for (int i = OrdersTotal() - 1; i >= 0; i--) {
+    if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+      if (OrderSymbol() == _Symbol)
+        overallProfit += OrderProfit();
+    }
+  }
+   double val = overallProfit;
+   double averagePrice = (SymbolInfoDouble(_Symbol, SYMBOL_BID) + SymbolInfoDouble(_Symbol, SYMBOL_ASK)) / 2;
+   int slippage = int(2.0 * (Ask - Bid) / _Point);
+   //distance = 150 * _Point;
    
-   if(val > max){
-      max = val;
-      Print("MAX PROFIT: ", max);
-      Print("MAX DD: ",min);
-      }
-
-  if(buy_entry_made )
-   //Print("BUY ",_Symbol, buy_entry_made);
-   
-  if(sell_entry_made)
-   //Print("sell ",_Symbol, sell_entry_made);
-  double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+   double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
   // Calculate the Bollinger Bands
   int period = 100;
   double deviation = 3;
@@ -1333,17 +1493,55 @@ void OnTick()
   middle = iBands(NULL, 0, period, deviation, 0, applied_price, MODE_MAIN, 0);
   lower = iBands(NULL, 0, period, deviation, 0, applied_price, MODE_LOWER, 0);
   
+  if(averagePrice <  upper - (upper - middle) && averagePrice >  lower + (middle - lower)/2){
+      close_flag = false;
+  }
+   if(val < min){
+      min = val;
+      Print("MAX DD: ",min);
+      Print("MAX PROFIT: ", max);
+      Print("PROFIT: ", AccountInfoDouble(ACCOUNT_PROFIT));
+      }
+   
+   if(val > max){
+      max = val;
+      Print("MAX PROFIT: ", max);
+      Print("MAX DD: ",min);
+      Print("PROFIT: ", AccountInfoDouble(ACCOUNT_PROFIT));
+      }
+      
+       //Print("PROFIT: ", AccountInfoDouble(ACCOUNT_PROFIT));
+
+  
+  
   double average = 0;
   double sumUpper = 0;
   double sumlower = 0;
   
-  for (int i = 0; i <  period; i++){
+  for (i = 0; i <  period; i++){
       sumUpper += upper;
       sumlower += lower;
   }
   
   average = (sumUpper - sumlower) / period;
+  
+  //distance = 1000 * _Point; 
   distance = average/2;
+  if(buy_entry_made && SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower -  0 * _Point) )
+  {
+      AdjBuyPositions();
+         }
+
+  
+  //Print(close_flag);
+   //Print("BUY ",_Symbol, buy_entry_made);
+   
+  if(sell_entry_made && SymbolInfoDouble(_Symbol, SYMBOL_ASK)>= (upper + 0 * _Point))
+    {
+   AdjSellPositions();
+   
+  }
+  
   
 
 
@@ -1353,52 +1551,64 @@ void OnTick()
   //Print("Lower Band: ", lower);
   //Print("iClose(_Symbol, PERIOD_CURRENT,0): ", iClose(_Symbol, PERIOD_CURRENT,0));
   
-  int dist = 50;
+  double Bdist = 0;
+  double Sdist = 0;
+  
+  if(SAdj1 || BAdj1){
+   Bdist = (upper - middle) / 4;
+   Sdist = (middle - lower) / 4;
+  }else{
+   Bdist = (upper - middle) / 4;
+   Sdist = (middle - lower) / 4;
+  }
   double buy_close = 0;
   double sell_close = 0;
   bool break_even = false;
   if(SAdj2 == true || BAdj2 == true){
      // ClosePositionsIfOpenForFiveDays();
   }
-  if(val < 0  && (!SAdj1 || !BAdj1)){
+  if((SAdj1 || BAdj1)){
       buy_close = upper; 
       sell_close = lower;
   }else{
-   buy_close = middle; 
-   sell_close = middle;
+   buy_close = upper; 
+   sell_close = lower;
   }
   
  
 
-if(val > -5)
+if(!(val < 0) ){
   if (SAdj8 || BAdj8) {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist));
+    CloseSellPositions(tp, sell_close + (Sdist ));
   } else if ((SAdj7 && !SAdj8) || (BAdj7 && !BAdj8)) {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist));
+    CloseSellPositions(tp, sell_close + (Sdist ));
   } else if ((SAdj6 && !SAdj7) || (BAdj6 && !BAdj7)) {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist ));
+    CloseSellPositions(tp, sell_close + (Sdist ));
   } else if ((SAdj5 && !SAdj6) || (BAdj5 && !BAdj6)) {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist));
+    CloseSellPositions(tp, sell_close + (Sdist ));
   } else if ((SAdj4 && !SAdj5) || (BAdj4 && !BAdj5)) {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist ));
+    CloseSellPositions(tp, sell_close + (Sdist ));
   } else if ((SAdj3 && !SAdj4) || (BAdj3 && !BAdj4)) {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist));
+    CloseSellPositions(tp, sell_close + (Sdist ));
   } else if ((SAdj2 && !SAdj3) || (BAdj2 && !BAdj3)) {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist ));
+    CloseSellPositions(tp, sell_close + (Sdist));
   } else if ((SAdj1 && !SAdj2) || (BAdj1 && !BAdj2)) {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist));
+    CloseSellPositions(tp, sell_close + (Sdist ));
   } else {
-    CloseBuyPositions(tp, buy_close - (dist * _Point));
-    CloseSellPositions(tp, sell_close + (dist * _Point));
+    CloseBuyPositions(tp, buy_close - (Bdist ));
+    CloseSellPositions(tp, sell_close + (Sdist));
   }
+  }
+  
+
   
 
 
@@ -1410,7 +1620,9 @@ if(val > -5)
   bool isBearishEveningStar = IsBearishEveningStar();
 
   bool isBullishMorningStar = IsBullishMorningStar();
-  double averagePrice = (SymbolInfoDouble(_Symbol, SYMBOL_BID) + SymbolInfoDouble(_Symbol, SYMBOL_ASK)) / 2;
+  
+  
+
   //Print(_Symbol, SymbolInfoDouble(_Symbol, SYMBOL_ASK));
   //Print(_Symbol, SymbolInfoDouble(_Symbol, SYMBOL_BID));
   //Print("Lower: ", _Symbol,lower);
@@ -1418,17 +1630,17 @@ if(val > -5)
   //Print("1 ", _Symbol, (SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower -10 * _Point)));
   //Print("2 ", ((middle - lower) > (50 * _Point)));
   //Print("3 ", (middle - lower) < (500 * _Point));
-  if ((SymbolInfoDouble(_Symbol, SYMBOL_ASK)>= (upper + 0 * _Point)) && (upper - lower) < average ) {
+  if ((SymbolInfoDouble(_Symbol, SYMBOL_ASK)>= (upper + 0 * _Point)) && (upper - lower) > (average)  ) {
     //Print("Sell");
-    if(sell_entry_made == false && buy_entry_made == false){
+    if(sell_entry_made == false && buy_entry_made == false && close_flag == false){
       sendSellOrder(true);
     }else if(sell_entry_made) {
     AdjSellPositions();
     }
     
-  } else if ((SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower + 0 * _Point)) && (upper - lower) < average ) {
+  } else if ((SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower -  0 * _Point)) && (upper - lower) > (average)  ) {
     //Print("BUY");
-    if(sell_entry_made == false && buy_entry_made == false){
+    if(sell_entry_made == false && buy_entry_made == false  && close_flag == false){
       sendBuyOrder(true);
     }else if(buy_entry_made) {
     AdjBuyPositions();
