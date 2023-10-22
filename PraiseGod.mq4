@@ -514,6 +514,10 @@ void CloseSellPositions(double profitThreshold, double middle) {
               SAdj6 = false;
               SAdj7 = false;
               SAdj8 = false;
+              SAdj9 = false;
+              SAdj10 = false;
+              SAdj11 = false;
+              
               
             // Declare an array to store the line names
             string lineNames[4];
@@ -689,7 +693,7 @@ void sendBuyOrder(bool initial) {
   
    
 
-  double cost = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+  double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
   //if (order_type == ORDER_TYPE_SELL)
   //cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
 
@@ -712,7 +716,7 @@ void sendBuyOrder(bool initial) {
      //   return;
    // }
 
-  if (/*((currentHour > 21 && currentHour < 1) || (currentHour > 6 && currentHour < 8)||(currentHour > 12 && currentHour < 14)) && */initial == true) {
+  if ((currentHour > 4 && currentHour < 15) && initial == true) {
     if(OrderSend(Symbol(), OP_BUY, size, cost, slippage, 0, 0, magic, 0, 0, clrNONE)){ // ORDER SEND
     //last_profit_level = cost;    // Update the last profit level
 
@@ -729,14 +733,7 @@ void sendBuyOrder(bool initial) {
        last_buy_bb_price = cost;
      
    
-       ObjectCreate(0, "My Line1", OBJ_HLINE, 0, 0, Buythreshold10Pips);
-       ObjectCreate(0, "My Line2", OBJ_HLINE, 0, 0, Buythreshold20Pips);
-       ObjectCreate(0, "My Line3", OBJ_HLINE, 0, 0, Buythreshold30Pips);
-       ObjectCreate(0, "My Line4", OBJ_HLINE, 0, 0, Buythreshold40Pips);
-       ObjectCreate(0, "My Line5", OBJ_HLINE, 0, 0, Buythreshold50Pips);
-       ObjectCreate(0, "My Line6", OBJ_HLINE, 0, 0, Buythreshold60Pips);
-       ObjectCreate(0, "My Line7", OBJ_HLINE, 0, 0, Buythreshold70Pips);
-       ObjectCreate(0, "My Line8", OBJ_HLINE, 0, 0, Buythreshold80Pips);
+       
        //Print("ORDER SENT");
     }
 
@@ -807,7 +804,7 @@ void sendSellOrder(bool initial) {
   double size = LotSize;
 
 
-  double cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+  double cost = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
   //if (order_type == ORDER_TYPE_SELL)
   //cost = SymbolInfoDouble(Symbol(), SYMBOL_BID);
 
@@ -829,7 +826,7 @@ void sendSellOrder(bool initial) {
         //Print("Too soon to send another buy order");
         //return;
     //}
-  if (/*((currentHour > 21 && currentHour < 1) || (currentHour > 6 && currentHour < 8)||(currentHour > 12 && currentHour < 14)) && */initial == true) {
+  if ((currentHour > 4 && currentHour < 15) && initial == true) {
     if(OrderSend(Symbol(), OP_SELL, size, cost, slippage, 0, 0, magic, 0, 0, clrNONE)){ // ORDER SEND
     //last_profit_level = cost;    // Update the last profit level
 
@@ -846,14 +843,7 @@ void sendSellOrder(bool initial) {
        last_sell_bb_price = cost;
        
    
-       ObjectCreate(0, "My Line1", OBJ_HLINE, 0, 0, Sellthreshold10Pips);
-       ObjectCreate(0, "My Line2", OBJ_HLINE, 0, 0, Sellthreshold20Pips);
-       ObjectCreate(0, "My Line3", OBJ_HLINE, 0, 0, Sellthreshold30Pips);
-       ObjectCreate(0, "My Line4", OBJ_HLINE, 0, 0, Sellthreshold40Pips);
-       ObjectCreate(0, "My Line5", OBJ_HLINE, 0, 0, Sellthreshold50Pips);
-       ObjectCreate(0, "My Line6", OBJ_HLINE, 0, 0, Sellthreshold60Pips);
-       ObjectCreate(0, "My Line7", OBJ_HLINE, 0, 0, Sellthreshold70Pips);
-       ObjectCreate(0, "My Line8", OBJ_HLINE, 0, 0, Sellthreshold80Pips);
+       
        //Print("ORDER SENT");
     }
 
@@ -873,12 +863,14 @@ void sendSellOrder(bool initial) {
        SAdj6 = true;
    } else if (!SAdj7) {
        SAdj7 = true;
+   } else if (!SAdj8) {
+       SAdj8 = true;
    } else if (!SAdj9) {
-       SAdj8 = true;
+       SAdj9 = true;
    } else if (!SAdj10) {
-       SAdj7 = true;
+       SAdj10 = true;
    } else if (!SAdj11) {
-       SAdj8 = true;
+       SAdj11 = true;
    }
       
       if (SAdj1)
@@ -898,11 +890,11 @@ void sendSellOrder(bool initial) {
      if(SAdj8)
       size = size8;
      if(SAdj9)
-      size =size6;
+      size =size9;
      if(SAdj10)
-      size = size7;
+      size = size10;
      if(SAdj11)
-      size = size8;
+      size = size11;
 
  
     if(OrderSend(Symbol(), OP_SELL, size, cost, slippage, 0, 0, 0, 0, 0, clrNONE)){
@@ -918,9 +910,15 @@ void sendSellOrder(bool initial) {
 void ClosePositionsIfOpenForFiveDays() {
 
   double overallProfit = 0;
+   for (int i = OrdersTotal() - 1; i >= 0; i--) {
+    if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
+      if (OrderSymbol() == _Symbol)
+        overallProfit += OrderProfit();
+    }
+  }
   int slippage = int(2.0 * (Ask - Bid) / _Point);
 
-  for (int i = OrdersTotal() - 1; i >= 0; i--) {
+  for (i = OrdersTotal() - 1; i >= 0; i--) {
     if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
       if (OrderSymbol() == _Symbol) {
         datetime entryTime = OrderOpenTime();
@@ -934,7 +932,7 @@ void ClosePositionsIfOpenForFiveDays() {
       //Print("timeDifference", timeDifference)
 
 
-        if ((timeDifference >= 60 && AccountInfoDouble(ACCOUNT_PROFIT) < 0 /*&& ClosePositionsIfEquityBelowPercentOfBalance(51)*/)) {
+        if ((overallProfit < BalanceThreshold /*&& ClosePositionsIfEquityBelowPercentOfBalance(51)*/)) {
           Print("CLOSE");
           for (i = OrdersTotal() - 1; i >= 0; i--) {
             if (OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) {
@@ -1196,7 +1194,7 @@ void AdjBuyPositions()
 
   }
 
-  if (currentPrice <= last_buy_bb_price - (distance*1.5  ) && BAdj2 == false  && BuyA2)
+  if (currentPrice <= last_buy_bb_price - (distance) && BAdj2 == false  && BuyA2)
 
   {
 
@@ -1214,7 +1212,7 @@ void AdjBuyPositions()
 
   }
 
-  if (currentPrice <= last_buy_bb_price - (distance*2 ) && BAdj3 == false  && BuyA3)
+  if (currentPrice <= last_buy_bb_price - (distance) && BAdj3 == false  && BuyA3)
 
   {
 
@@ -1232,7 +1230,7 @@ void AdjBuyPositions()
 
   }
 
-  if (currentPrice <= last_buy_bb_price - (distance *2) && BAdj4 == false  && BuyA4)
+  if (currentPrice <= last_buy_bb_price - (distance ) && BAdj4 == false  && BuyA4)
 
     {
 
@@ -1247,7 +1245,7 @@ void AdjBuyPositions()
 
     }
     
-        if (currentPrice <= last_buy_bb_price - (distance *2) && BAdj5 == false && BuyA5)
+        if (currentPrice <= last_buy_bb_price - (distance ) && BAdj5 == false && BuyA5)
 
     {
 
@@ -1262,7 +1260,7 @@ void AdjBuyPositions()
 
     }
     
-            if (currentPrice <= last_buy_bb_price - (distance *2) && BAdj6 == false   && BuyA6)
+            if (currentPrice <= last_buy_bb_price - (distance ) && BAdj6 == false   && BuyA6)
 
     {
 
@@ -1277,7 +1275,7 @@ void AdjBuyPositions()
 
     }
     
-            if (currentPrice <= last_buy_bb_price - (distance *2) && BAdj7 == false   && BuyA7)
+            if (currentPrice <= last_buy_bb_price - (distance ) && BAdj7 == false   && BuyA7)
 
     {
 
@@ -1288,7 +1286,7 @@ void AdjBuyPositions()
        
     }
     
-            if (currentPrice <= last_buy_bb_price - (distance *2) && BAdj8 == false   && BuyA8)
+            if (currentPrice <= last_buy_bb_price - (distance ) && BAdj8 == false   && BuyA8)
 
     {
 
@@ -1300,7 +1298,7 @@ void AdjBuyPositions()
 
     }
     
-    if (currentPrice <= last_buy_bb_price - (distance *2) && BAdj9 == false   && BuyA9)
+    if (currentPrice <= last_buy_bb_price - (distance ) && BAdj9 == false   && BuyA9)
 
     {
 
@@ -1312,7 +1310,7 @@ void AdjBuyPositions()
 
     }
     
-    if (currentPrice <= last_buy_bb_price - (distance *2) && BAdj10 == false   && BuyA10)
+    if (currentPrice <= last_buy_bb_price - (distance ) && BAdj10 == false   && BuyA10)
 
     {
 
@@ -1324,7 +1322,7 @@ void AdjBuyPositions()
 
     }
     
-    if (currentPrice <= last_buy_bb_price - (distance *2) && BAdj11 == false   && BuyA11)
+    if (currentPrice <= last_buy_bb_price - (distance ) && BAdj11 == false   && BuyA11)
 
     {
 
@@ -1496,12 +1494,12 @@ void OnTick()
   int period = 20;
   double deviation = 3;
   int applied_price = PRICE_CLOSE;
+  // Find the index of the last completed candle
+   int lastCompletedCandle = iBarShift(NULL, 0, Time[0]);
 
-  // Retrieve the most recent values
-
-  upper = iBands(NULL, 0, period, deviation, 0, applied_price, MODE_UPPER, 0);
-  middle = iBands(NULL, 0, period, deviation, 0, applied_price, MODE_MAIN, 0);
-  lower = iBands(NULL, 0, period, deviation, 0, applied_price, MODE_LOWER, 0);
+  upper = iBands(NULL, 0, period, deviation, 0, applied_price, MODE_UPPER, lastCompletedCandle);
+  middle = iBands(NULL, 0, period, deviation, 0, applied_price, MODE_MAIN, lastCompletedCandle);
+  lower = iBands(NULL, 0, period, deviation, 0, applied_price, MODE_LOWER, lastCompletedCandle);
   
   if(averagePrice <  upper - (upper - middle) && averagePrice >  lower + (middle - lower)/2){
       close_flag = false;
@@ -1536,7 +1534,7 @@ void OnTick()
   average = (sumUpper - sumlower) / period;
   
   if(!buy_entry_made && !sell_entry_made){
-      distance = (upper - lower)/2;
+      distance = distancee * _Point;
   } 
   
   
@@ -1567,33 +1565,45 @@ void OnTick()
   
  
   
-  if(SAdj1 || BAdj1){
+
    Bdist = (upper - middle);
    Sdist = (middle - lower);
-  }else{
-   Bdist = (upper - middle);
-   Sdist = (middle - lower);
-  }
+  
   double buy_close = 0;
   double sell_close = 0;
   bool break_even = false;
   if(SAdj2 == true || BAdj2 == true){
      // ClosePositionsIfOpenForFiveDays();
   }
+  
   if((SAdj1 || BAdj1)){
-      buy_close = upper - Sdist/3;
-      sell_close = lower + Bdist/3;
+      buy_close = upper - Bdist/1.5; 
+      sell_close = lower + Sdist/1.5;
   }else if((SAdj2 || BAdj2)){
-      buy_close = middle - Sdist/5; 
-      sell_close = middle + Bdist/5;    
+      buy_close = middle - Sdist/3; 
+      sell_close = middle + Bdist/3;    
   }else{
-   buy_close = middle - Sdist/3; 
-   sell_close = middle + Bdist/3;
+   buy_close = middle + Sdist/3; 
+   sell_close = middle - Bdist/3;
   }
+
+
+
+    // Remove the previous bid and ask lines
+    ObjectDelete(0, "buy_close");
+    ObjectDelete(0, "sell_close");
+
+    // Draw the bid line
+    ObjectCreate(0, "buy_close", OBJ_HLINE, 0, 0, buy_close);
+    ObjectSetInteger(0, "buy_close", OBJPROP_COLOR, clrRed);
+
+    // Draw the ask line
+    ObjectCreate(0, "sell_close", OBJ_HLINE, 0, 0, sell_close);
+    ObjectSetInteger(0, "sell_close", OBJPROP_COLOR, clrRed);
   
  
 
-
+if((!SAdj1 && !BAdj1) || ((SAdj1 || BAdj1)) && val > 0){
   if (SAdj8 || BAdj8) {
     CloseBuyPositions(tp, buy_close);
     CloseSellPositions(tp, sell_close);
@@ -1622,6 +1632,8 @@ void OnTick()
     CloseBuyPositions(tp, buy_close);
     CloseSellPositions(tp, sell_close);
   }
+  }
+  
  
 
   
@@ -1630,7 +1642,7 @@ void OnTick()
   
   
   
-  
+  double price  = (SymbolInfoDouble(_Symbol, SYMBOL_BID) + SymbolInfoDouble(_Symbol, SYMBOL_ASK)) / 2;
 
   //Print(_Symbol, SymbolInfoDouble(_Symbol, SYMBOL_ASK));
   //Print(_Symbol, SymbolInfoDouble(_Symbol, SYMBOL_BID));
@@ -1639,20 +1651,20 @@ void OnTick()
   //Print("1 ", _Symbol, (SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower -10 * _Point)));
   //Print("2 ", ((middle - lower) > (50 * _Point)));
   //Print("3 ", (middle - lower) < (500 * _Point));
-  if ((SymbolInfoDouble(_Symbol, SYMBOL_BID)>= (upper - Bdist/4)) /*&& (upper - lower) > (average*0.75)*/  ) {
+  if (price>= (upper - Bdist/4) /*&& (upper - lower) > (average*0.75)*/  ) {
     //Print("Sell");
     if(sell_entry_made == false && buy_entry_made == false && close_flag == false){
       sendSellOrder(true);
     }else if(sell_entry_made) {
-    AdjSellPositions();
+    //AdjSellPositions();
     }
     
-  } else if ((SymbolInfoDouble(_Symbol, SYMBOL_BID) <= (lower + Sdist/4)) /*&& (upper - lower) > (average*0.75)*/  ) {
+  } else if (price <= (lower + Sdist/4) /*&& (upper - lower) > (average*0.75)*/  ) {
     //Print("BUY");
     if(sell_entry_made == false && buy_entry_made == false  && close_flag == false){
-      sendBuyOrder(true);
+      //sendBuyOrder(true);
     }else if(buy_entry_made) {
-    AdjBuyPositions();
+    //AdjBuyPositions();
     }
   }
   
